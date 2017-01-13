@@ -40,7 +40,7 @@ try:
             url = re.findall('"(.*?)"', url)[0]
             url = 'https://subscene.com' + url
             open_new_tab(url)
-        time.sleep(3)
+        time.sleep(4)
         os.system('find ~/Downloads/ -name "*.zip" -exec unzip -o -d ~/Desktop/subs/%s/jp {} \;' % item)
         os.system('find ~/Downloads/ -name "*.rar" -exec unrar x {} ~/Desktop/subs/%s/jp \;' % item)
         time.sleep(2)
@@ -53,7 +53,7 @@ try:
             url = re.findall('"(.*?)"', url)[0]
             url = 'https://subscene.com' + url
             open_new_tab(url)
-        time.sleep(3)
+        time.sleep(4)
         os.system('find ~/Downloads/ -name "*.zip" -exec unzip -o -d ~/Desktop/subs/%s/en {} \;' % item)
         os.system('find ~/Downloads/ -name "*.rar" -exec unrar x {} ~/Desktop/subs/%s/en \;' % item)
         time.sleep(2)
