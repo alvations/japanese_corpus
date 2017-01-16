@@ -1,28 +1,13 @@
+| Site                                                                                                     | Notes                                                                                                            | Status                                          |
+|----------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
+| [d-addits](http://www.d-addicts.com/forums/page/subtitles?sid=c00e06662e59c449c2b2814b22e7bc90#Japanese) | * ~600 dramas, ~5M sentance pairs,<br>  * fansubs,<br> * japanese & english subs in different parts of same page | not started                                     |
+| [OpenSubtitles](http://opus.lingfil.uu.se/OpenSubtitles2016.php)                                         | * 1.4M sentance pairs,<br> * professional translations, 1-1 en/jp matching (in same file)                        | * sentances scraped<br> * have to write parsers |
+| [kitsunekko](http://kitsunekko.net/dirlist.php?dir=subtitles%2Fjapanese%2F)                              | * ~600 dramas/movies (largeley incomplete), ~3M pairs<br> * fansubs<br> * en/jp lists on different pages         | not started                                     |
+| [nihongo-jimaku](http://nihongo-jimaku.blogspot.jp/)                                                     | * ~225 movies (.25M sentances),<br> * jp only, no en                                                             | debating on whether to include these            |
+| [subscene](http://v2.subscene.com/subtitles/a/japanese.aspx)                                             | * ~2000 movies/shows, ~5M sentance pairs,<br> * mix of fansubs & professional translations                       | Crawling the page, ~50% of subs are downloaded  |
 
 
-### Subtitle repositories
 
-This list isn't exaustive, but it's a start
-
-* http://www.d-addicts.com/forums/page/subtitles?sid=c00e06662e59c449c2b2814b22e7bc90#Japanese
-  * ~600 dramas, ~5M sentance pairs
-  * fansubs
-  * japanese & english subs in different parts of same page
-* http://opus.lingfil.uu.se/OpenSubtitles2016.php
-  * 1.4M sentance pairs
-  * professional translations, 1-1 en/jp matching (in same file)
-* http://kitsunekko.net/dirlist.php?dir=subtitles%2F, http://kitsunekko.net/dirlist.php?dir=subtitles%2Fjapanese%2F
-  * ~600 dramas/movies (largeley incomplete), ~3M pairs
-  * fansubs
-  * en/jp lists on different pages
-* http://nihongo-jimaku.blogspot.jp/
-  * ~225 movies (.25M sentances)
-  * jp only, no en
-* https://subscene.com/browse, http://v2.subscene.com/subtitles/a/japanese.aspx
-  * seems like v2 of ^^
-  * set filter to japanese, then get english for each item by changing url)
-  * ~2000 movies/shows, ~5M sentance pairs
-  * mix of fansubs & professional translations
 
 ### Roadblocks
 
