@@ -24,7 +24,6 @@ This list isn't exaustive, but it's a start
   * ~2000 movies/shows, ~5M sentance pairs
   * mix of fansubs & professional translations
 
-
 ### Roadblocks
 
 * accessing paired translations
