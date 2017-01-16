@@ -36,10 +36,17 @@ This list isn't exaustive, but it's a start
 * romanji transliterations
   * soln: throw out
 
-  
+
 
 ### file formats
-
+* smi
 * tmx
 * ass
 * srt
+
+
+### observed problems with downloaded subs
+* unaligned translations
+* transliteration of japanese characters
+* broken character encodings (gobblygook)
+* stuff that doesn't belong (i.e. "TRANSLATED BY ______")
