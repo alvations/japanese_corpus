@@ -1,21 +1,71 @@
 """
-Many subtitle files have weird ass encodings like SHIFT-JIS, and aren't nessicarily 
-  in srt format. This file should be able to handle pretty much any case, and make 
-  a nicely packaged data structure for subs files.
+parse stuff
+
+=== IMPORTANT PRECONDITION
+Subs to be organized in a directory structure looking like this:
+
+   subs_root/
+      movie-1/
+         en/
+           english subs for movie 1
+         jp/
+           jp subs for movie 1
+      tv-show-thats-rly-cool
+         en/
+           subs
+         jp/
+           subs
+      ... 
+
 """
 import sys
 import os
+import collections
+import numpy as np
+
+def distance(source, target):
+    """FAST Levenschtein distance between two strings
+       Used for fuzzy matching of subs to titles
+       
+       might not need!
+    """
+    if len(source) < len(target):
+        return distance(target, source)
+
+    if len(target) == 0:
+        return len(source)
+
+    # make np character arrays
+    source = np.array(tuple(source))
+    target = np.array(tuple(target))
+
+    # use normal dp algorithm. throw away everything but last two rows of matrix
+    previous_row = np.arange(target.size + 1)
+    for s in source:
+        # insertion (cost of 1)
+        current_row = previous_row + 1
+
+        # substitution (cost of 1) or matching (cost of 0)
+        current_row[1:] = np.minimum(
+                current_row[1:],
+                np.add(previous_row[:-1], target != s))
+
+        # deletion (cost of 1)
+        current_row[1:] = np.minimum(
+                current_row[1:],
+                current_row[0:-1] + 1)
+
+        previous_row = current_row
+
+    return previous_row[-1]
 
 
-class SubFile(object):
-    
-    def __init__(self, file_path):
-        utf8_text = self.__convert_to_utf8(file_path)
+root = sys.argv[1]
+
+# {movie title: subs for that title}  mapping
+SUBS = {title: {'en': [], 'jp': []} for title in os.listdir(root)}
 
 
-
-    def __convert_to_utf8(self, fp):
-        output = os.popen('chardetect %s' % fp).read()
-        charset = output.split(':')[1].strip().split(' ')[0]      # ugly but chardetect's output is determanistic
-        
-        os.system('iconv -f %s -t UTF-8 %s > %s
+for title in SUBS:
+    print os.listdir(root + '/' + title + '/en/')
+    print os.listdir(root + '/' + title + '/jp/')
