@@ -38,7 +38,8 @@ def correct(fp):
     # ugly but chardetect's output is determanistic and meh
     charset = output.split(':')[1].strip().split(' ')[0]
     if charset.upper() in supported_encodings:
-        os.system('iconv -f %s -t UTF-8 "%s" > "%s"' % (charset, fp, fp))
+        os.system('iconv -f %s -t UTF-8 "%s" > "%s"' % (charset, fp, fp + '.utf8'))
+        os.system('mv "%s" "%s"' % (fp + '.utf8', fp))
         print 'CONVERTED \n\t to "%s" \n\t encoding was: %s' % (fp, charset)
     else:
         print 'SKIPPED \n\t %s \n\t encoding was: %s' % (fp, charset)
