@@ -4,7 +4,7 @@
 | [OpenSubtitles](http://opus.lingfil.uu.se/OpenSubtitles2016.php)                                         | * 1.4M sentance pairs,<br> * professional translations, 1-1 en/jp matching (in same file)                        | * sentances scraped<br> * have to write parsers |
 | [kitsunekko](http://kitsunekko.net/dirlist.php?dir=subtitles%2Fjapanese%2F)                              | * ~600 dramas/movies (largeley incomplete), ~3M pairs<br> * fansubs<br> * en/jp lists on different pages         | not started                                     |
 | [nihongo-jimaku](http://nihongo-jimaku.blogspot.jp/)                                                     | * ~225 movies (.25M sentances),<br> * jp only, no en                                                             | debating on whether to include these            |
-| [subscene](http://v2.subscene.com/subtitles/a/japanese.aspx)                                             | * ~2000 movies/shows, ~5M sentance pairs,<br> * mix of fansubs & professional translations                       | **crawled**<br>starting to convert everything to utf-8  |
+| [subscene](http://v2.subscene.com/subtitles/a/japanese.aspx)                                             | * ~2000 movies/shows, ~5M sentance pairs,<br> * mix of fansubs & professional translations                       | * **crawled**<br>* standardized charsets<br>* `.srt` parser done<br>* caption cleaner v1 done  |
 
 
 
