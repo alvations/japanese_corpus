@@ -19,6 +19,13 @@ Subs to be organized in a directory structure looking like this:
 
 
 
+=== USAGE
+   python parse_subfile.py ~/Documents/japanese_corpus/subs/
+
+
+=== TODO
+   - japanese parse (+ matching)
+   - filter out uninformative/broken subs
 """
 import sys
 import os
