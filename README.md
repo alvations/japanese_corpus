@@ -26,7 +26,7 @@
 * smi
 * tmx
 * ass
-* srt
+* **srt** (95.3% of subscene subfiles...only use these?)
 
 
 ### observed problems with downloaded subs
