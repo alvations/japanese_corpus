@@ -24,8 +24,8 @@ Subs to be organized in a directory structure looking like this:
 
 
 === TODO
-   - japanese parse (+ matching)
    - filter out uninformative/broken subs
+   - pull out second- and third-order matches from hit list
 """
 import sys
 import os
@@ -120,20 +120,20 @@ def extract_episode_info(filename):
     ep_candidates = re.findall('[^\d](\d)[^\d]|[^\d](\d\d)[^\d]', filename)
     print filename, ep_candidates
 
-def overlapping_keys(d1, d2):
-    """ number of overlapping keys between two dicts"""
+def num_shared_keys(d1, d2):
+    """number of overlapping keys between two dicts"""
     return len(set(d1.keys()) & set(d2.keys()))
 
 root = sys.argv[1]
 
 # {movie title: subs for that title}  mapping
-SUBS = {title: {'en': {}, 'jp': {}} for title in os.listdir(root)}
+SUBS = {title: {} for title in os.listdir(root)}
 
 filetypes = defaultdict(lambda: 0)
 
-total = 0
+MATCH_THRESHOLD = 0.1
+
 for title in tqdm(SUBS):
-    c = 0
     title_subs = {}
     for en_sub in os.listdir(root + '/' + title + '/en/'):
         ts_caption_mapping = parse_subfile('%s/%s/%s/%s' % (root, title, 'en', en_sub))
@@ -144,26 +144,20 @@ for title in tqdm(SUBS):
     for jp_sub in os.listdir(root + '/' + title + '/jp/'):
         ts_caption_mapping = parse_subfile('%s/%s/%s/%s' % (root, title, 'jp', jp_sub))
         if ts_caption_mapping:
-            for en_sub, en_mapping in title_subs.iteritems():
-                
+            # look at all complementary en sub files, sort them by % of matching subs
+            ranked_matches = sorted([
+                    (num_shared_keys(en_mapping, ts_caption_mapping) / (len(ts_caption_mapping) * 1.0), en_sub, en_mapping) \
+                         for en_sub, en_mapping in title_subs.iteritems() 
+                    ])
+            if len(ranked_matches) == 0:
+                continue
+            percent, best_match, best_mapping = ranked_matches[-1]
+            if percent > MATCH_THRESHOLD:
+                SUBS[title] = {ts: (caption, best_mapping[ts]) for ts, caption in ts_caption_mapping.iteritems() if best_mapping.get(ts)}
+
+    print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
 
 
-#       for ts, caption in (ts_caption_mapping or {}).iteritems():
-#            if title_subs.get(ts, None):
- 
-#               title_subs[ts] = title_subs[ts], caption
-#                c += 1
-
-    d = 0
-    for title, pair in title_subs.iteritems():
-        if type(pair) == type(tuple()):
-#$            print pair[0], pair[1]
-            d += 1
-#    print c, d
-    total += d
-#    print total
-    print ' ' 
-print total
 
 
 
