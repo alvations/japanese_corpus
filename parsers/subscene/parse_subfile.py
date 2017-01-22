@@ -25,7 +25,6 @@ Subs to be organized in a directory structure looking like this:
 
 === TODO
    - filter out uninformative/broken subs
-   - pull out second- and third-order matches from hit list
 """
 import sys
 import os
@@ -34,8 +33,8 @@ import numpy as np
 import re
 from tqdm import tqdm
 
-SRT_TS_PATTERN = '\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}'
-
+SRT_TS_PATTERN = '\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}'    # match timestamps in srt files
+MATCH_THRESHOLD = 0.1                                                     # percent jp/en shared timestamps needed to extract subs from an srt 
 
 def levenshtein(source, target):
     if len(source) < len(target):
@@ -124,14 +123,31 @@ def num_shared_keys(d1, d2):
     """number of overlapping keys between two dicts"""
     return len(set(d1.keys()) & set(d2.keys()))
 
+
+def add_subs_for_title(subs_dict, title, jp_mapping, match):
+    """ extract matching subs from a {ts => caption} mapping, and add them into the dictionary iff
+        there isn't already a translation available for that timestamp
+    """
+    # unpack sub file match
+    percent, _, en_mapping = match
+    # don't include subs from bad matches 
+    if percent < MATCH_THRESHOLD:
+        return 
+    subs_dict[title].update({
+            ts: (jp_caption, en_mapping[ts]) for ts, jp_caption in jp_mapping.iteritems() \
+                if ( en_mapping.get(ts) and not subs_dict[title].get(ts) )
+            })
+    
+
+
 root = sys.argv[1]
 
-# {movie title: subs for that title}  mapping
+# {movie title: {ts : "en sub", "jp sub"}}  mapping
 SUBS = {title: {} for title in os.listdir(root)}
 
 filetypes = defaultdict(lambda: 0)
 
-MATCH_THRESHOLD = 0.1
+
 
 for title in tqdm(SUBS):
     title_subs = {}
@@ -149,11 +165,21 @@ for title in tqdm(SUBS):
                     (num_shared_keys(en_mapping, ts_caption_mapping) / (len(ts_caption_mapping) * 1.0), en_sub, en_mapping) \
                          for en_sub, en_mapping in title_subs.iteritems() 
                     ])
+            # skip if there's no matches
             if len(ranked_matches) == 0:
                 continue
-            percent, best_match, best_mapping = ranked_matches[-1]
-            if percent > MATCH_THRESHOLD:
-                SUBS[title] = {ts: (caption, best_mapping[ts]) for ts, caption in ts_caption_mapping.iteritems() if best_mapping.get(ts)}
+            # extract best matches
+            add_subs_for_title(SUBS, title, ts_caption_mapping, ranked_matches[-1])
+            # add in subs from second best
+            if len(ranked_matches) > 1:
+                add_subs_for_title(SUBS, title, ts_caption_mapping, ranked_matches[-2])
+            # third best
+            if len(ranked_matches) > 2:
+                add_subs_for_title(SUBS, title, ts_caption_mapping, ranked_matches[-3])
+
+
+
+
 
     print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
 
