@@ -24,7 +24,10 @@ Subs to be organized in a directory structure looking like this:
 
 
 === TODO
-   - filter out uninformative/broken subs
+   - filter out non-japanese subs (post-processing?)
+   - rm everything in brackets they are typically used for reporting 
+     extra linguistic phenomena like  (Laughter), (Applause), (Music), (Video), etc.
+
 """
 import sys
 import os
@@ -35,51 +38,6 @@ from tqdm import tqdm
 
 SRT_TS_PATTERN = '\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}'    # match timestamps in srt files
 MATCH_THRESHOLD = 0.1                                                     # percent jp/en shared timestamps needed to extract subs from an srt 
-
-def levenshtein(source, target):
-    if len(source) < len(target):
-        return levenshtein(target, source)
-
-    # So now we have len(source) >= len(target).
-    if len(target) == 0:
-        return len(source)
-
-    # We call tuple() to force strings to be used as sequences
-    # ('c', 'a', 't', 's') - numpy uses them as values by default.
-    source = np.array(tuple(source))
-    target = np.array(tuple(target))
-
-    # We use a dynamic programming algorithm, but with the
-    # added optimization that we only need the last two rows
-    # of the matrix.
-    previous_row = np.arange(target.size + 1)
-    for s in source:
-        # Insertion (target grows longer than source):
-        current_row = previous_row + 1
-
-        # Substitution or matching:
-        # Target and source items are aligned, and either
-        # are different (cost of 1), or are the same (cost of 0).
-        current_row[1:] = np.minimum(
-                current_row[1:],
-                np.add(previous_row[:-1], target != s))
-
-        # Deletion (target grows shorter than source):
-        current_row[1:] = np.minimum(
-                current_row[1:],
-                current_row[0:-1] + 1)
-
-        previous_row = current_row
-
-    return previous_row[-1]
-
-
-def make_comparator(f):
-    def compare(x, y):
-        return f(x, y)
-
-    return compare
-
 
 
 def clean_ts(x):
@@ -92,6 +50,7 @@ def clean_text(x):
     x = re.sub('\d+$', '', x)         # remove srt sub index 
     x = x.strip()                     # chop off newly exposed newlines 
     x = re.sub('\r\n|\r|\n', ' ', x)  # join multiline subs
+    x = re.sub('\<.*?\>', "", x)      # remove style tags, i.e. ""<font color="#ff0000">hello</font>""
     return x
 
 
@@ -135,7 +94,7 @@ def add_subs_for_title(subs_dict, title, jp_mapping, match):
         return 
     subs_dict[title].update({
             ts: (jp_caption, en_mapping[ts]) for ts, jp_caption in jp_mapping.iteritems() \
-                if ( en_mapping.get(ts) and not subs_dict[title].get(ts) )
+                if ( en_mapping.get(ts) and not subs_dict[title].get(ts) and len(jp_caption) > 0 )
             })
     
 
@@ -152,33 +111,30 @@ filetypes = defaultdict(lambda: 0)
 for title in tqdm(SUBS):
     title_subs = {}
     for en_sub in os.listdir(root + '/' + title + '/en/'):
-        ts_caption_mapping = parse_subfile('%s/%s/%s/%s' % (root, title, 'en', en_sub))
-        if ts_caption_mapping:
-            title_subs[en_sub] = ts_caption_mapping
+        en_mapping = parse_subfile('%s/%s/%s/%s' % (root, title, 'en', en_sub))
+        if en_mapping:
+            title_subs[en_sub] = en_mapping
 
 
     for jp_sub in os.listdir(root + '/' + title + '/jp/'):
-        ts_caption_mapping = parse_subfile('%s/%s/%s/%s' % (root, title, 'jp', jp_sub))
-        if ts_caption_mapping:
+        jp_mapping = parse_subfile('%s/%s/%s/%s' % (root, title, 'jp', jp_sub))
+        if jp_mapping:
             # look at all complementary en sub files, sort them by % of matching subs
             ranked_matches = sorted([
-                    (num_shared_keys(en_mapping, ts_caption_mapping) / (len(ts_caption_mapping) * 1.0), en_sub, en_mapping) \
+                    (num_shared_keys(en_mapping, jp_mapping) / (len(jp_mapping) * 1.0), en_sub, en_mapping) \
                          for en_sub, en_mapping in title_subs.iteritems() 
                     ])
             # skip if there's no matches
             if len(ranked_matches) == 0:
                 continue
             # extract best matches
-            add_subs_for_title(SUBS, title, ts_caption_mapping, ranked_matches[-1])
+            add_subs_for_title(SUBS, title, jp_mapping, ranked_matches[-1])
             # add in subs from second best
             if len(ranked_matches) > 1:
-                add_subs_for_title(SUBS, title, ts_caption_mapping, ranked_matches[-2])
+                add_subs_for_title(SUBS, title, jp_mapping, ranked_matches[-2])
             # third best
             if len(ranked_matches) > 2:
-                add_subs_for_title(SUBS, title, ts_caption_mapping, ranked_matches[-3])
-
-
-
+                add_subs_for_title(SUBS, title, jp_mapping, ranked_matches[-3])
 
 
     print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
