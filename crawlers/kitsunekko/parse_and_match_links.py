@@ -26,6 +26,57 @@ from fuzzywuzzy import fuzz
 import string
 import numpy as np
 import collections
+import os
+import urllib 
+from webbrowser import open_new_tab
+
+
+
+def extract_url(html):
+    """ extract url from kitsunekko html link
+    """
+    return re.findall('href="(.*?)"', html)[0]
+
+def extract_title(html):
+    """ extract title from kitsunekko html link
+    """
+    title = html.split("/strong")[0]          # hacky way of cutting out 2nd column
+    title = re.sub('\<.*?\>', "", title)
+    title = title.translate(None, string.punctuation).strip()   # remove punctuation
+    title = title.replace(' ', '_').lower()
+    return title
+
+def generate_info(fp):
+    """ generate urls and titles from a file pointer to kitunekko search page html dump
+    """
+    for line in fp:
+        line = line.strip()
+        url = extract_url(line)
+        title = extract_title(line)
+        yield url, title
+
+def dl_subs(title, jp_urls, en_urls):
+    """ downloads billingual subs for a title
+    """
+    def extract_urls(dl_page):
+        os.system('wget %s -O tmp' % dl_page)
+        os.system('grep "<a href=\"subtitles/" tmp > tmp2')
+        urls = open('tmp2').read().strip()
+        urls = re.findall('<a href="subtitles/(.*?)"', urls)
+        for url in urls:
+            url = 'http://kitsunekko.net/subtitles/' + url
+            url = urllib.quote(url)
+            yield url
+
+    os.system('mkdir ~/Desktop/subs/%s' % title)
+    os.system('mkdir ~/Desktop/subs/%s/jp' % title)
+    os.system('mkdir ~/Desktop/subs/%s/en' % title)
+
+    for jp_sub in jp_urls:
+        for url in extract_urls(jp_sub):
+            open_new_tab(url)
+    # TODO:  EXTRACT TO RIGHT DIR
+    # TODO: ENx
 
 
 en_file = open(sys.argv[1])
@@ -33,29 +84,16 @@ jp_file = open(sys.argv[2])
 
 SUBS = {}
 
-for line in jp_file:
-    # extract and clean url, title
-    line = line.strip()
-    url = re.findall('href="(.*?)"', line)[0]
-    title = line.split("/strong")[0]          # hacky way of cutting out 2nd column
-    title = re.sub('\<.*?\>', "", title)
-    title = title.translate(None, string.punctuation).strip()   # remove punctuation
-    title = title.replace(' ', '_').lower()
-    SUBS[title] = collections.defaultdict(list)
-    SUBS[title]['jp'].append(url)
+##### build japanese half of the mapping
+for (jp_url, jp_title) in generate_info(jp_file):
+    SUBS[jp_title] = collections.defaultdict(list)
+    SUBS[jp_title]['jp'].append(jp_url)
 
+##### match english subs to preexisting japanese titles
 #candidates = []
-for line in en_file:
-    # extract and clean url, title
-    line = line.strip()
-    en_url = re.findall('href="(.*?)"', line)[0]
-    en_title = line.split("/strong")[0]          # again, cut out 2nd col
-    en_title = re.sub('\<.*?\>', "", en_title)
-    en_title = en_title.translate(None, string.punctuation).strip()   # remove punctuation
-    en_title = en_title.replace(' ', '_').lower()
-
-    score, jp_title =  sorted(map(lambda x: (fuzz.ratio(x, en_title), x), SUBS.keys()))[-1]
-    if score > 81:      # see commented block below
+for (en_url, en_title) in generate_info(en_file):
+    score, jp_title = sorted(map(lambda x: (fuzz.ratio(x, en_title), x), SUBS.keys()))[-1]
+    if score > 81:      # see commented block below, selection based on global score distribution
         SUBS[jp_title]['en'].append(en_url)
 
 ################ take everything better than 81 (mu + .5 std)
@@ -65,10 +103,21 @@ for line in en_file:
 #mu = np.mean([x[0] for x in candidates])
 #print mu, std
 
-c = 0
-for jp_title, urls in SUBS.iteritems():
-    if type(urls) == type(tuple()):
-        print urls
-        c += 1
 
-print c
+###### cut out titles with subs for both languages and start downloading 'em
+matching_subs = [(title, urls) for (title, urls) in SUBS.iteritems() if len(urls['en']) > 0]
+
+os.system('mkdir ~/Desktop/subs')
+for i, (title, urls) in enumerate(matching_subs):
+    try:
+        # close out of chrome every once in a while to give my machine AND kitsunekko a breather
+        if i % 50 == 0
+            print 'RESTING'
+            os.system('pkill -a -i "Google Chrome"')
+            time.sleep(20)
+
+        dl_subs(title, urls['jp'], urls['en'])
+    except:
+        print 'SOMETHING BROKE, SKIPPING...', title
+        os.system('rm ~/Downloads/*')
+        continue
