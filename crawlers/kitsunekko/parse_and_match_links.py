@@ -14,11 +14,7 @@ python parse_and_match_links.py en_links.txt jp_links.txt
 
 
 TODO
- - finish up organization
- - dl
-
-
-
+  - run it!
 """
 import sys
 import re
@@ -28,8 +24,8 @@ import numpy as np
 import collections
 import os
 import urllib 
-from webbrowser import open_new_tab
-
+import webbrowser
+import time
 
 
 def extract_url(html):
@@ -60,13 +56,25 @@ def dl_subs(title, jp_urls, en_urls):
     """
     def extract_urls(dl_page):
         os.system('wget %s -O tmp' % dl_page)
-        os.system('grep "<a href=\"subtitles/" tmp > tmp2')
+        os.system('grep "<tr><td>" tmp > tmp2')     # pull out links to sub pages
         urls = open('tmp2').read().strip()
         urls = re.findall('<a href="subtitles/(.*?)"', urls)
         for url in urls:
-            url = 'http://kitsunekko.net/subtitles/' + url
             url = urllib.quote(url)
+            url = 'http://kitsunekko.net/subtitles/' + url
             yield url
+
+    def inflate_and_store(lang):
+        # from kitsunekko codebase: accepted fileformats are:
+        #     zip, rar, 7z, ass, ssa, srt
+        time.sleep(10)
+        os.system('find ~/Downloads/ -name "*.zip" -exec unzip -o -d ~/Desktop/subs/%s/%s {} \;' % (title, lang))
+        os.system('find ~/Downloads/ -name "*.rar" -exec unrar x -o+ {} ~/Desktop/subs/%s/%s \;' % (title, lang))
+        os.system('find ~/Downloads/ -name "*.7z" -exec 7za x -o/Users/rapigan/Desktop/subs/%s/%s {} \;zxc' % (title, lang))
+        os.system('rm ~/Downloads/*.zip ~/Downloads/*.rar ~/Downloads/*.7z')
+        os.system('mv ~/Downloads/* ~/Desktop/subs/%s/%s' % (title, lang))
+        time.sleep(2)
+        os.system('rm ~/Downloads/*')
 
     os.system('mkdir ~/Desktop/subs/%s' % title)
     os.system('mkdir ~/Desktop/subs/%s/jp' % title)
@@ -74,9 +82,17 @@ def dl_subs(title, jp_urls, en_urls):
 
     for jp_sub in jp_urls:
         for url in extract_urls(jp_sub):
-            open_new_tab(url)
-    # TODO:  EXTRACT TO RIGHT DIR
-    # TODO: ENx
+            webbrowser.open_new_tab(url)
+            inflate_and_store('jp')
+
+    time.sleep(5)
+
+    for en_sub in en_urls:
+        for url in extract_urls(en_sub):
+            webbrowser.open_new_tab(url)
+            inflate_and_store('en')
+
+    time.sleep(10)
 
 
 en_file = open(sys.argv[1])
@@ -111,13 +127,14 @@ os.system('mkdir ~/Desktop/subs')
 for i, (title, urls) in enumerate(matching_subs):
     try:
         # close out of chrome every once in a while to give my machine AND kitsunekko a breather
-        if i % 50 == 0
+        if i % 50 == 0:
             print 'RESTING'
             os.system('pkill -a -i "Google Chrome"')
             time.sleep(20)
 
         dl_subs(title, urls['jp'], urls['en'])
-    except:
-        print 'SOMETHING BROKE, SKIPPING...', title
+    except Exception as e:
+        print 'SOMETHING BROKE, SKIPPING...', 
+        print e
         os.system('rm ~/Downloads/*')
-        continue
+
