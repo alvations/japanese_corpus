@@ -15,6 +15,7 @@ python parse_and_match_links.py en_links.txt jp_links.txt
 
 TODO
   - run it!
+  - AT 25TH TITLE!!
 """
 import sys
 import re
@@ -132,7 +133,12 @@ for i, (title, urls) in enumerate(matching_subs):
             os.system('pkill -a -i "Google Chrome"')
             time.sleep(20)
 
+        # skip if there ain't subs for both
+        if not urls['jp'] or not urls['en']:
+            continue
+
         dl_subs(title, urls['jp'], urls['en'])
+
     except Exception as e:
         print 'SOMETHING BROKE, SKIPPING...', 
         print e
