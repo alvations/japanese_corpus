@@ -68,13 +68,13 @@ def dl_subs(title, jp_urls, en_urls):
     def inflate_and_store(lang):
         # from kitsunekko codebase: accepted fileformats are:
         #     zip, rar, 7z, ass, ssa, srt
-        time.sleep(10)
+        time.sleep(1)
         os.system('find ~/Downloads/ -name "*.zip" -exec unzip -o -d ~/Desktop/subs/%s/%s {} \;' % (title, lang))
         os.system('find ~/Downloads/ -name "*.rar" -exec unrar x -o+ {} ~/Desktop/subs/%s/%s \;' % (title, lang))
         os.system('find ~/Downloads/ -name "*.7z" -exec 7za x -o/Users/rapigan/Desktop/subs/%s/%s {} \;zxc' % (title, lang))
         os.system('rm ~/Downloads/*.zip ~/Downloads/*.rar ~/Downloads/*.7z')
-        os.system('mv ~/Downloads/* ~/Desktop/subs/%s/%s' % (title, lang))
         time.sleep(2)
+        os.system('mv ~/Downloads/* ~/Desktop/subs/%s/%s' % (title, lang))
         os.system('rm ~/Downloads/*')
 
     os.system('mkdir ~/Desktop/subs/%s' % title)
@@ -86,14 +86,14 @@ def dl_subs(title, jp_urls, en_urls):
             webbrowser.open_new_tab(url)
             inflate_and_store('jp')
 
-    time.sleep(5)
+    time.sleep(2)
 
     for en_sub in en_urls:
         for url in extract_urls(en_sub):
             webbrowser.open_new_tab(url)
             inflate_and_store('en')
 
-    time.sleep(10)
+    time.sleep(1)
 
 
 en_file = open(sys.argv[1])
@@ -122,16 +122,19 @@ for (en_url, en_title) in generate_info(en_file):
 
 
 ###### cut out titles with subs for both languages and start downloading 'em
-matching_subs = [(title, urls) for (title, urls) in SUBS.iteritems() if len(urls['en']) > 0]
+matching_subs = [(title, urls) for (title, urls) in SUBS.iteritems() if len(urls['en']) > 0 and len(urls['jp']) > 0]
 
 os.system('mkdir ~/Desktop/subs')
+
 for i, (title, urls) in enumerate(matching_subs):
+    if i < 365:       # got 25 titles on first night
+        continue
     try:
         # close out of chrome every once in a while to give my machine AND kitsunekko a breather
         if i % 50 == 0:
             print 'RESTING'
             os.system('pkill -a -i "Google Chrome"')
-            time.sleep(20)
+            time.sleep(5)
 
         # skip if there ain't subs for both
         if not urls['jp'] or not urls['en']:
