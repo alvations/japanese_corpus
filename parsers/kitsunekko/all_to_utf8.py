@@ -26,9 +26,6 @@ def to_utf8(fp, encodings):
     def get_charset(fp):
         """ detect encoding of a file """
         output = os.popen('chardetect "%s"' % fp).read()
-        print 'HERE', output
-        print fp
-        print '\n\n\n'
         charset = output.split(':')[1].strip().split(' ')[0]
         return charset.upper()
 
@@ -53,7 +50,8 @@ if __name__ == '__main__':
     # run concurrently 
     MAX_PROCESSES = 4
     processes = set()
-    files = [line.strip() for line in sys.stdin if 'DS_Store' not in line]
+    # i'm only going to support .ass + .srt subs
+    files = [line.strip() for line in sys.stdin if ('.ass' in line) or ('.srt' in line) ]
 
     for file in tqdm(files):
         p = Process(target=to_utf8, args=(file, supported_encodings,))
