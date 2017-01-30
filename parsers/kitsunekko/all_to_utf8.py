@@ -3,7 +3,7 @@ Many subtitle files have weird ass encodings like SHIFT-JIS.
 This python script replaces every file it's piped with good 'ole UTF-8 .
 
 === EXAMPLE USAGE: recursively converts everything in given directory:
-find ~/Dir/with/files/ -type f | python correct_encodings.py
+find ~/Dir/with/files/ -type f | python all_to_utf8.py
 
 """
 import sys
