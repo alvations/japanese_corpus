@@ -61,9 +61,9 @@ def parse_subfile(file_path):
     _, ext = os.path.splitext(file_path)
     if ext.lower() != '.srt':
         return
-#    print file_path
+
     f = open(os.path.abspath(file_path)).read()
-    
+    # this is SUCH a stupid way of doing this...sigh
     timestamps = re.findall(SRT_TS_PATTERN, f)
     captions = re.split(SRT_TS_PATTERN, f)
     captions = captions[1:]     # ignore whatever's before the first timestamp
@@ -109,11 +109,11 @@ filetypes = defaultdict(lambda: 0)
 
 
 for title in tqdm(SUBS):
-    title_subs = {}
+    en_subs = {}
     for en_sub in os.listdir(root + '/' + title + '/en/'):
         en_mapping = parse_subfile('%s/%s/%s/%s' % (root, title, 'en', en_sub))
         if en_mapping:
-            title_subs[en_sub] = en_mapping
+            en_subs[en_sub] = en_mapping
 
 
     for jp_sub in os.listdir(root + '/' + title + '/jp/'):
@@ -122,7 +122,7 @@ for title in tqdm(SUBS):
             # look at all complementary en sub files, sort them by % of matching subs
             ranked_matches = sorted([
                     (num_shared_keys(en_mapping, jp_mapping) / (len(jp_mapping) * 1.0), en_sub, en_mapping) \
-                         for en_sub, en_mapping in title_subs.iteritems() 
+                         for en_sub, en_mapping in en_subs.iteritems() 
                     ])
             # skip if there's no matches
             if len(ranked_matches) == 0:
