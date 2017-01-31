@@ -23,7 +23,7 @@ parse stuff
 
 
 === USAGE
-   python parse_subfile.py ~/Documents/japanese_corpus/subs/
+   python parse_subfiles.py ~/Documents/kitsunekko_corpus
 
 
 === TODO
@@ -45,31 +45,28 @@ import re
 from tqdm import tqdm
 
 SRT_TS_PATTERN = '\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}'    # match timestamps in srt files
+ASS_TS_PATTERN = '\d:\d{2}:\d{2}.\d{2},\d:\d{2}:\d{2}.\d{2}'              # match ass timestamps, i.e. '0:24:16.26,0:24:21.50'
+
 MATCH_THRESHOLD = 0.1                                                     # percent jp/en shared timestamps needed to extract subs from an srt 
 
 
-def clean_ts(x):
-    """cut off timestamps at the second mark, pack start & end in a tuple"""
-    return re.findall('(\d{2}:\d{2}:\d{2}),\d{3} --> (\d{2}:\d{2}:\d{2}),\d{3}', x)[0]
 
-def clean_text(x):
-    """ filter and clean text"""
-    x = x.strip()                     # rm leading and trailing newlines, etc
-    x = re.sub('\d+$', '', x)         # remove srt sub index 
-    x = x.strip()                     # chop off newly exposed newlines 
-    x = re.sub('\r\n|\r|\n', ' ', x)  # join multiline subs
-    x = re.sub('\<.*?\>', "", x)      # remove style tags, i.e. ""<font color="#ff0000">hello</font>""
-    return x
-
-
-def parse_subfile(file_path):
-    """ makes { (start time, end time) : sub }  mmappings 
+def parse_srt(file_path):
+    """ makes { (start time, end time) : sub }  mmappings from srt files
     """
-    # .srt accounts for 95.3% (~35k files) of subs in this corpus, so i'm goign to worry about those later
-    _, ext = os.path.splitext(file_path)
-    if ext.lower() != '.srt':
-        return
-#    print file_path
+    def clean_ts(x):
+        """cut off timestamps at the second mark, pack start & end in a tuple"""
+        return re.findall('\d(\d:\d{2}:\d{2}),\d{3} --> \d(\d:\d{2}:\d{2}),\d{3}', x)[0]
+
+    def clean_text(x):
+        """ filter and clean text"""
+        x = x.strip()                     # rm leading and trailing newlines, etc
+        x = re.sub('\d+$', '', x)         # remove srt sub index 
+        x = x.strip()                     # chop off newly exposed newlines 
+        x = re.sub('\r\n|\r|\n', ' ', x)  # join multiline subs
+        x = re.sub('\<.*?\>', "", x)      # remove style tags, i.e. ""<font color="#ff0000">hello</font>""
+        return x
+
     f = open(os.path.abspath(file_path)).read()
     
     timestamps = re.findall(SRT_TS_PATTERN, f)
@@ -80,6 +77,41 @@ def parse_subfile(file_path):
         return None
     else:
         return {clean_ts(ts): clean_text(txt) for (ts, txt) in zip(timestamps, captions)}
+
+
+def parse_ass(file_path):
+    """ makes { (start time, end time) : sub }  mmappings from ass files
+    """
+    def clean_ts(x):
+        return re.findall('(\d:\d{2}:\d{2}).\d{2},(\d:\d{2}:\d{2}).\d{2}', x)[0]
+
+    def clean_text(x):
+        x = x.strip()
+        x = re.sub('\N|\h|{.*?}|\\\\', '', x)
+        return x
+
+    f = open(file_path).readlines()
+    caption_lines = [l for l in f if 'Dialogue:' in l]
+    timestamps = map(lambda x: re.findall(ASS_TS_PATTERN, x)[0], caption_lines)
+    captions = map(lambda x: x.split(',,')[-1].strip(), caption_lines)
+
+    return {clean_ts(ts): clean_text(txt) for (ts, txt) in zip(timestamps, captions)}
+
+
+def parse_subfile(file_path):
+    """ makes { (start time, end time) : sub }  mmappings 
+    """
+    _, ext = os.path.splitext(file_path)
+    # if something breaks, just ignore that file
+    try:
+        if ext.lower() == '.srt':
+            return parse_srt(file_path)
+        elif ext.lower() == '.ass':
+            return parse_ass(file_path)
+    except:
+        pass
+    return
+
 
 def extract_episode_info(filename):
     """many subs belong to tv shows, etc. this tries to pull out that episode info""" 
@@ -105,6 +137,15 @@ def add_subs_for_title(subs_dict, title, jp_mapping, match):
                 if ( en_mapping.get(ts) and not subs_dict[title].get(ts) and len(jp_caption) > 0 )
             })
     
+def recurse_retrieve(root, *extensions):
+    """ recursively searches a root directory and returns files
+        that match a given extension
+    """
+    return [
+               os.path.join(dp, f) for dp, dn, filenames in os.walk(root) \
+               for f in filenames \
+               if os.path.splitext(f)[1] in extensions
+           ]
 
 
 root = sys.argv[1]
@@ -118,8 +159,9 @@ filetypes = defaultdict(lambda: 0)
 
 for title in tqdm(SUBS):
     title_subs = {}
-    for en_sub in os.listdir(root + '/' + title + '/en/'):
-        en_mapping = parse_subfile('%s/%s/%s/%s' % (root, title, 'en', en_sub))
+    en_subs = recurse_retrieve(root + '/' + title + '/en/', '.srt', '.ass')
+    for en_sub in en_subs:
+        en_mapping = parse_subfile(en_sub)
         if en_mapping:
             title_subs[en_sub] = en_mapping
 
@@ -144,7 +186,12 @@ for title in tqdm(SUBS):
             if len(ranked_matches) > 2:
                 add_subs_for_title(SUBS, title, jp_mapping, ranked_matches[-3])
 
-
+    for t in SUBS:
+        for ts in SUBS[t]:
+            jp, en = SUBS[t][ts]
+            print jp
+            print en
+            print ''
     print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
 
 
