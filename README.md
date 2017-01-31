@@ -1,11 +1,10 @@
-## 3.4M sentance pairs so far
+## 3.8M sentance pairs so far
 
 | Source                                                                                                     | Notes                                                                                                            | Status                                          |
 |----------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
 | [d-addits](http://www.d-addicts.com/forums/page/subtitles?sid=c00e06662e59c449c2b2814b22e7bc90#Japanese) | * ~600 dramas, ~5M sentance pairs,<br>  * fansubs,<br> * japanese & english subs in different parts of same page | not started                                     |
 | [OpenSubtitles](http://opus.lingfil.uu.se/OpenSubtitles2016.php)                                         | * 1.4M sentance pairs,<br> * professional translations, 1-1 en/jp matching (in same file)                        | * sentances scraped<br> * **parsed** <br>* 1.3M sentance pairs |
-| [kitsunekko](http://kitsunekko.net/dirlist.php?dir=subtitles%2Fjapanese%2F)                              | * ~600 dramas/movies (largeley incomplete), ~3M pairs<br> * fansubs<br> * en/jp lists on different pages         | started crawler                                     |
-| [nihongo-jimaku](http://nihongo-jimaku.blogspot.jp/)                                                     | * ~225 movies (.25M sentances),<br> * jp only, no en                                                             | debating on whether to include these            |
+| [kitsunekko](http://kitsunekko.net/dirlist.php?dir=subtitles%2Fjapanese%2F)                              | * ~600 dramas/movies (largeley incomplete), ~3M pairs<br> * fansubs<br> * en/jp lists on different pages         | * finished crawler <br> * parser v1 done <br> * ~0.5M subs                                     |
 | [subscene](http://v2.subscene.com/subtitles/a/japanese.aspx)                                             | * ~2000 movies/shows, ~5M raw sentance pairs, ~1.6M usable pairs<br> * mix of fansubs & professional translations                       | * **crawled**<br>* standardized charsets<br>* `.srt` parser done<br>* caption cleaner **done** <br>* caption matcher v1 done <br> * **DONE FOR NOW** |
 | [TED talks](https://www.ted.com/talks) | ~100k pairs | * **CRAWLED**<br> * parser v1 done <br> * ~.5M sentance pairs |
 
