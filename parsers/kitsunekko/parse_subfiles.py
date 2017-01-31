@@ -28,10 +28,11 @@ parse stuff
 
 === TODO
 short term:
-   - adapt for nested directories
-   - extend for ass AND srt (and others?)
+    - filter out invalid matches ("Diolauge:...", longest matches, etc)
+    - prioritize matches by similar names (e.g. same number episode) (or double check that same num ep is being pulled) 
 
 longterm:
+   - spellcheck on english fansubs
    - filter out non-japanese subs (post-processing?)
    - rm everything in brackets they are typically used for reporting 
      extra linguistic phenomena like  (Laughter), (Applause), (Music), (Video), etc.
@@ -189,9 +190,9 @@ for title in tqdm(SUBS):
     for t in SUBS:
         for ts in SUBS[t]:
             jp, en = SUBS[t][ts]
-            print jp
-            print en
-            print ''
+#            print jp
+#            print en
+#            print ''
     print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
 
 
