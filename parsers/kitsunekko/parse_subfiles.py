@@ -23,8 +23,8 @@ parse stuff
 
 
 === USAGE
-   python parse_subfiles.py ~/Documents/kitsunekko_corpus
-
+   python parse_subfiles.py ~/Documents/kitsunekko_corpus [threshold]
+   NOTE: i found a threshold of 0.2 to work well based on 35 minutes of inspection at the per-title and per-sub level for 0.1, 0.15, 0.2, and 0.25
 
 === TODO
 short term:
@@ -48,7 +48,7 @@ from tqdm import tqdm
 SRT_TS_PATTERN = '\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}'    # match timestamps in srt files
 ASS_TS_PATTERN = '\d:\d{2}:\d{2}.\d{2},\d:\d{2}:\d{2}.\d{2}'              # match ass timestamps, i.e. '0:24:16.26,0:24:21.50'
 
-MATCH_THRESHOLD = 0.1                                                     # percent jp/en shared timestamps needed to extract subs from an srt 
+MATCH_THRESHOLD = float(sys.argv[2])                                       # percent jp/en shared timestamps needed to extract subs from an srt 
 
 
 
@@ -64,7 +64,7 @@ def parse_srt(file_path):
         x = x.strip()                     # rm leading and trailing newlines, etc
         x = re.sub('\d+$', '', x)         # remove srt sub index 
         x = x.strip()                     # chop off newly exposed newlines 
-        x = re.sub('\r\n|\r|\n', ' ', x)  # join multiline subs
+        x = re.sub('\r\n|\r|\n|\t|0000,0000,0000,\w*?,', ' ', x)  # join multiline subs
         x = re.sub('\<.*?\>', "", x)      # remove style tags, i.e. ""<font color="#ff0000">hello</font>""
         return x
 
@@ -88,7 +88,7 @@ def parse_ass(file_path):
 
     def clean_text(x):
         x = x.strip()
-        x = re.sub('\N|\h|{.*?}|\\\\', '', x)
+        x = re.sub('\N|\h|{.*?}|\\\\|\t|0000,0000,0000,\w*?,', '', x)
         return x
 
     f = open(file_path).readlines()
@@ -123,16 +123,15 @@ def num_shared_keys(d1, d2):
     """number of overlapping keys between two dicts"""
     return len(set(d1.keys()) & set(d2.keys()))
 
+def prop_shared_keys(d1, d2):
+    """proportion of overlapping keys between two dicts"""
+    return num_shared_keys(d1, d2) / (len(d2) * 1.0)
 
-def add_subs_for_title(subs_dict, title, jp_mapping, match):
+
+def add_subs_for_title(subs_dict, title, jp_mapping, en_title):
     """ extract matching subs from a {ts => caption} mapping, and add them into the dictionary iff
         there isn't already a translation available for that timestamp
     """
-    # unpack sub file match
-    percent, _, en_mapping = match
-    # don't include subs from bad matches 
-    if percent < MATCH_THRESHOLD:
-        return 
     subs_dict[title].update({
             ts: (jp_caption, en_mapping[ts]) for ts, jp_caption in jp_mapping.iteritems() \
                 if ( en_mapping.get(ts) and not subs_dict[title].get(ts) and len(jp_caption) > 0 )
@@ -172,28 +171,22 @@ for title in tqdm(SUBS):
         if jp_mapping:
             # look at all complementary en sub files, sort them by % of matching subs
             ranked_matches = sorted([
-                    (num_shared_keys(en_mapping, jp_mapping) / (len(jp_mapping) * 1.0), en_sub, en_mapping) \
+                    (prop_shared_keys(en_mapping, jp_mapping), en_sub, en_mapping) \
                          for en_sub, en_mapping in title_subs.iteritems() 
                     ])
-            # skip if there's no matches
-            if len(ranked_matches) == 0:
-                continue
-            # extract best matches
-            add_subs_for_title(SUBS, title, jp_mapping, ranked_matches[-1])
-            # add in subs from second best
-            if len(ranked_matches) > 1:
-                add_subs_for_title(SUBS, title, jp_mapping, ranked_matches[-2])
-            # third best
-            if len(ranked_matches) > 2:
-                add_subs_for_title(SUBS, title, jp_mapping, ranked_matches[-3])
+            # add in matching subs from all files above the threshold
+            for i, (percent, en_filename, en_mapping) in enumerate(ranked_matches[::-1]):
+                if percent < MATCH_THRESHOLD:
+                    break
+                add_subs_for_title(SUBS, title, jp_mapping, en_mapping)
 
-    for t in SUBS:
-        for ts in SUBS[t]:
-            jp, en = SUBS[t][ts]
-#            print jp
-#            print en
-#            print ''
-    print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
+for t in SUBS:
+    for ts in SUBS[t]:
+        en, jp = SUBS[t][ts]
+        print en
+        print jp
+        print ''
+print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
 
 
 
