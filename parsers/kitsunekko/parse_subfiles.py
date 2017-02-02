@@ -44,6 +44,8 @@ from collections import defaultdict
 import numpy as np
 import re
 from tqdm import tqdm
+from autocorrect import spell
+
 
 SRT_TS_PATTERN = '\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}'    # match timestamps in srt files
 ASS_TS_PATTERN = '\d:\d{2}:\d{2}.\d{2},\d:\d{2}:\d{2}.\d{2}'              # match ass timestamps, i.e. '0:24:16.26,0:24:21.50'
@@ -127,6 +129,9 @@ def prop_shared_keys(d1, d2):
     """proportion of overlapping keys between two dicts"""
     return num_shared_keys(d1, d2) / (len(d2) * 1.0)
 
+def fix_spelling(s):
+    """ NEED TO USE BIGRAM FREQS, THIS DOESN'T WORK!! """
+    x =  ' '.join(spell(w) for w in s.split())
 
 def add_subs_for_title(subs_dict, title, jp_mapping, en_title):
     """ extract matching subs from a {ts => caption} mapping, and add them into the dictionary iff
