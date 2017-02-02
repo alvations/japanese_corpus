@@ -83,15 +83,10 @@ def num_shared_keys(d1, d2):
     return len(set(d1.keys()) & set(d2.keys()))
 
 
-def add_subs_for_title(subs_dict, title, jp_mapping, match):
+def add_subs_for_title(subs_dict, title, jp_mapping, en_mapping):
     """ extract matching subs from a {ts => caption} mapping, and add them into the dictionary iff
         there isn't already a translation available for that timestamp
     """
-    # unpack sub file match
-    percent, _, en_mapping = match
-    # don't include subs from bad matches 
-    if percent < MATCH_THRESHOLD:
-        return 
     subs_dict[title].update({
             ts: (jp_caption, en_mapping[ts]) for ts, jp_caption in jp_mapping.iteritems() \
                 if ( en_mapping.get(ts) and not subs_dict[title].get(ts) and len(jp_caption) > 0 )
@@ -124,22 +119,22 @@ for title in tqdm(SUBS):
                     (num_shared_keys(en_mapping, jp_mapping) / (len(jp_mapping) * 1.0), en_sub, en_mapping) \
                          for en_sub, en_mapping in en_subs.iteritems() 
                     ])
-            # skip if there's no matches
-            if len(ranked_matches) == 0:
-                continue
-            # extract best matches
-            add_subs_for_title(SUBS, title, jp_mapping, ranked_matches[-1])
-            # add in subs from second best
-            if len(ranked_matches) > 1:
-                add_subs_for_title(SUBS, title, jp_mapping, ranked_matches[-2])
-            # third best
-            if len(ranked_matches) > 2:
-                add_subs_for_title(SUBS, title, jp_mapping, ranked_matches[-3])
 
 
-    print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
+#            print title
+#            for p, f, _ in ranked_matches[::-1]:
+#                print f, p
+#            print
+
+        
+            # add in matching subs from all files above the threshold   
+            for i, (percent, en_filename, en_mapping) in enumerate(ranked_matches[::-1]):
+                if percent < MATCH_THRESHOLD:
+                    break
+                add_subs_for_title(SUBS, title, jp_mapping, en_mapping)
 
 
+print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
 
 
 
