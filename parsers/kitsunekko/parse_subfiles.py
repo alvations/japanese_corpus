@@ -44,6 +44,7 @@ from collections import defaultdict
 import numpy as np
 import re
 from tqdm import tqdm
+import uuid
 from autocorrect import spell
 
 
@@ -187,11 +188,16 @@ for title in tqdm(SUBS):
 
 for t in SUBS:
     for ts in SUBS[t]:
-        en, jp = SUBS[t][ts]
-        print en
-        print jp
-        print ''
-print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
+        ID = uuid.uuid4()
+        jp, en = SUBS[t][ts]
+        print '%s-JP <%s>' % (ID, jp)
+        print '%s-EN <%s>' % (ID, en) 
+        print
+#        print en
+#        print jp
+#        print 
+
+#print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
 
 
 
