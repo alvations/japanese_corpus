@@ -35,6 +35,9 @@ from collections import defaultdict
 import numpy as np
 import re
 from tqdm import tqdm
+import uuid
+
+
 
 SRT_TS_PATTERN = '\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}'    # match timestamps in srt files
 MATCH_THRESHOLD = 0.1                                                     # percent jp/en shared timestamps needed to extract subs from an srt 
@@ -76,7 +79,7 @@ def parse_subfile(file_path):
 def extract_episode_info(filename):
     """many subs belong to tv shows, etc. this tries to pull out that episode info""" 
     ep_candidates = re.findall('[^\d](\d)[^\d]|[^\d](\d\d)[^\d]', filename)
-    print filename, ep_candidates
+#    print filename, ep_candidates
 
 def num_shared_keys(d1, d2):
     """number of overlapping keys between two dicts"""
@@ -133,8 +136,15 @@ for title in tqdm(SUBS):
                     break
                 add_subs_for_title(SUBS, title, jp_mapping, en_mapping)
 
+for t in SUBS:
+    for ts in SUBS[t]:
+        ID = uuid.uuid4()
+        jp, en = SUBS[t][ts]
+        print '%s-JP <%s>' % (ID, jp)
+        print '%s-EN <%s>' % (ID, en)         
+        print 
 
-print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
+#print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
 
 
 
