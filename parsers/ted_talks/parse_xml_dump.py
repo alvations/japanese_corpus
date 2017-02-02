@@ -30,6 +30,8 @@ import xmltodict
 from collections import defaultdict
 import re
 from tqdm import tqdm
+import uuid
+
 
 en_xml = open(sys.argv[1])
 jp_xml = open(sys.argv[2])
@@ -51,7 +53,7 @@ for line in en_xml:
             continue
         caption_id = id_text[0]
         caption = re.sub('\<.*?\>', "", line)
-        SUBS[cur_talk_id][caption_id] = caption
+        SUBS[cur_talk_id][caption_id] = caption.strip()
 
 
 for line in jp_xml:
@@ -66,21 +68,23 @@ for line in jp_xml:
         caption_id = id_text[0]
         caption = re.sub('\<.*?\>', "", line)
         if SUBS.get(cur_talk_id) and SUBS[cur_talk_id].get(caption_id):
-            SUBS[cur_talk_id][caption_id] =  SUBS[cur_talk_id][caption_id], caption
-c = 0
+            SUBS[cur_talk_id][caption_id] =  SUBS[cur_talk_id][caption_id], caption.strip()
+
+
+#c = 0
 for talk in SUBS:
-    for caption in SUBS[talk]:
-        if type(SUBS[talk][caption]) == type(tuple()):
-            c += 1
-#            en, jp = SUBS[talk][caption]
-#            print en
+    for ts in SUBS[talk]:
+        if type(SUBS[talk][ts]) == type(tuple()):
+            ID = uuid.uuid4()
+#            c += 1
+            en, jp = SUBS[talk][ts]
+            print '%s-JP <%s>' % (ID, jp)
+            print '%s-EN <%s>' % (ID, en) 
+#           print en
 #            print jp
-#            print '' 
-print c
+            print 
+#print c
 
 
-#print en_dict.keys()
-
-#jp_dict = xmltodict.parse(open(sys.argv[2]).read())
 
 
