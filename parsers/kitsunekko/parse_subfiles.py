@@ -45,7 +45,9 @@ import numpy as np
 import re
 from tqdm import tqdm
 import uuid
-from autocorrect import spell
+from reconstruct import Reconstructor 
+
+
 
 
 SRT_TS_PATTERN = '\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}'    # match timestamps in srt files
@@ -186,12 +188,13 @@ for title in tqdm(SUBS):
                     break
                 add_subs_for_title(SUBS, title, jp_mapping, en_mapping)
 
+r = Reconstructor()     # RECONSTRUCT SENTANCES? IF SO WHAT CORPUS?
 for t in SUBS:
     for ts in SUBS[t]:
         ID = uuid.uuid4()
         jp, en = SUBS[t][ts]
         print '%s-JP <%s>' % (ID, jp)
-        print '%s-EN <%s>' % (ID, en) 
+        print '%s-EN <%s>' % (ID, r.reconstruct(en)) 
         print
 #        print en
 #        print jp

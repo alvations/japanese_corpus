@@ -41,6 +41,7 @@ class VowelInsertionProblem:
         for filling in self.possibleFills(cur_word):
             succ.append((filling, (filling, state[1] + 1), self.bigramCost(state[0], filling)))
         return succ
+
  
 class spellCheckUtil:
     @staticmethod
@@ -138,13 +139,6 @@ class PriorityQueue:
         return (None, None) # Nothing left...
 
 
-
-
-
-
-
-
-
 class wordsegUtil:
     SENTENCE_BEGIN = '-BEGIN-'
     @staticmethod
@@ -240,10 +234,10 @@ class wordsegUtil:
         return smoothModel
 
     ############################################################
-    # Make a map for inverse lookup of words without vowels -> possible
+    # Make a map for inverse lookup of words missing chars ->
     # full words
     @staticmethod
-    def makeInverseRemovalDictionary(path, removeChars):
+    def makeInverseRemovalDictionary(path):
         wordsRemovedToFull = collections.defaultdict(set)
         dictionary = collections.defaultdict(lambda: False)
 
@@ -264,9 +258,19 @@ class wordsegUtil:
 
 
 
-
-
+class Reconstructor:
+    def __init__(self, corpus=None):
+        corpus = corpus or 'leo-will.txt'
     
+        self.unigramCost, self.bigramCost = wordsegUtil.makeLanguageModels(corpus)
+        self.possibleFills, self.dictionary = wordsegUtil.makeInverseRemovalDictionary(corpus)
+        
+    def reconstruct(self, s):
+        """ reconstruct a sentance s 
+        """
+        s = wordsegUtil.cleanLine(s)
+        ws = [w for w in wordsegUtil.words(s)]
+        return spellCheckUtil.insertVowels(ws, self.bigramCost, self.possibleFills, self.dictionary)
 
 
 
@@ -283,7 +287,7 @@ class Shell:
         sys.stdout.flush()
 
         unigramCost, bigramCost = wordsegUtil.makeLanguageModels(corpus)
-        possibleFills, dictionary = wordsegUtil.makeInverseRemovalDictionary(corpus, 'aeiou')
+        possibleFills, dictionary = wordsegUtil.makeInverseRemovalDictionary(corpus)
 
         print 'Done!'
         print ''
