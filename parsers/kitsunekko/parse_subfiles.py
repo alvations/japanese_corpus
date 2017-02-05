@@ -188,13 +188,14 @@ for title in tqdm(SUBS):
                     break
                 add_subs_for_title(SUBS, title, jp_mapping, en_mapping)
 
-r = Reconstructor()     # RECONSTRUCT SENTANCES? IF SO WHAT CORPUS?
+#r = Reconstructor()     # RECONSTRUCT SENTANCES? IF SO WHAT CORPUS?
 for t in SUBS:
     for ts in SUBS[t]:
         ID = uuid.uuid4()
         jp, en = SUBS[t][ts]
         print '%s-JP <%s>' % (ID, jp)
-        print '%s-EN <%s>' % (ID, r.reconstruct(en)) 
+        print '%s-EN <%s>' % (ID, en) 
+#        print '%s-EN <%s>' % (ID, r.reconstruct(en)) 
         print
 #        print en
 #        print jp
