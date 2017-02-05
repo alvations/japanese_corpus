@@ -1,3 +1,9 @@
+"""
+adapted from my cs221 pset solution
+
+"""
+
+
 
 import collections
 import math
@@ -25,7 +31,7 @@ class VowelInsertionProblem:
          return state[1] == len(self.queryWords)
  
     def succAndCost(self, state):
-         cur_word = self.queryWords[state[1]]
+        cur_word = self.queryWords[state[1]]
         fillings = self.possibleFills(cur_word)
         # corner case: there are no fillings - just return word as-is as the only successor
         if len(fillings) == 0 or self.dictionary[cur_word]:
@@ -42,10 +48,10 @@ class spellCheckUtil:
          if len(queryWords) == 0:
             return ''
 
-        ucs = UniformCostSearch(verbose=0)
-        ucs.solve(VowelInsertionProblem(queryWords, bigramCost, possibleFills, dictionary))
+         ucs = UniformCostSearch(verbose=0)
+         ucs.solve(VowelInsertionProblem(queryWords, bigramCost, possibleFills, dictionary))
 
-        return ' '.join(ucs.actions) if ucs.actions else ""
+         return ' '.join(ucs.actions) if ucs.actions else ""
 
 
 class UniformCostSearch:
@@ -130,8 +136,6 @@ class PriorityQueue:
             self.priorities[state] = self.DONE
             return (state, priority)
         return (None, None) # Nothing left...
-
-
 
 
 
@@ -247,9 +251,8 @@ class wordsegUtil:
             for l in f:
                 for w in wordsegUtil.words(wordsegUtil.cleanLine(l)):
                     dictionary[w] = True
-                    for wp in wordsegUtil.editNeighbors(w):
-                        for wpp in wordsegUtil.editNeighbors(wp):
-                            wordsRemovedToFull[wpp].add(w)
+                    for wp in wordsegUtil.editNeighbors(w):    # all edit distance 1 candidates
+                        wordsRemovedToFull[wp].add(w)
 
         wordsRemovedToFull = dict(wordsRemovedToFull)
         empty = set()
@@ -261,6 +264,9 @@ class wordsegUtil:
 
 
 
+
+
+    
 
 
 
