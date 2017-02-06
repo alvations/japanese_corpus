@@ -1,5 +1,7 @@
 ## 3M sentance pairs so far
 
+Number one TODO: first pass on everything is done. Now make everything more resilient and accurate. 
+
 | Source                                                                                                     | Notes                                                                                                            | Status                                          |
 |----------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
 | [d-addits](http://www.d-addicts.com/forums/page/subtitles?sid=c00e06662e59c449c2b2814b22e7bc90#Japanese) | * ~600 dramas, ~5M sentance pairs,<br>  * fansubs,<br> * japanese & english subs in different parts of same page | not started                                     |
