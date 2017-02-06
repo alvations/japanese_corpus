@@ -36,11 +36,11 @@ import numpy as np
 import re
 from tqdm import tqdm
 import uuid
-
+import string
 
 
 SRT_TS_PATTERN = '\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}'    # match timestamps in srt files
-MATCH_THRESHOLD = 0.1                                                     # percent jp/en shared timestamps needed to extract subs from an srt 
+MATCH_THRESHOLD = 0.2                                                     # percent jp/en shared timestamps needed to extract subs from an srt 
 
 
 def clean_ts(x):
@@ -73,18 +73,21 @@ def parse_subfile(file_path):
 
     if len(captions) == 0:
         return None
-    else:
-        return {clean_ts(ts): clean_text(txt) for (ts, txt) in zip(timestamps, captions)}
+    return {clean_ts(ts): clean_text(txt) for (ts, txt) in zip(timestamps, captions)}
+    
 
 def extract_episode_info(filename):
     """many subs belong to tv shows, etc. this tries to pull out that episode info""" 
     ep_candidates = re.findall('[^\d](\d)[^\d]|[^\d](\d\d)[^\d]', filename)
-#    print filename, ep_candidates
 
 def num_shared_keys(d1, d2):
     """number of overlapping keys between two dicts"""
     return len(set(d1.keys()) & set(d2.keys()))
 
+def is_english(s):
+    """ tests whether a query string is all english characters
+    """
+    return all([c in string.printable for c in s])
 
 def add_subs_for_title(subs_dict, title, jp_mapping, en_mapping):
     """ extract matching subs from a {ts => caption} mapping, and add them into the dictionary iff
@@ -92,9 +95,10 @@ def add_subs_for_title(subs_dict, title, jp_mapping, en_mapping):
     """
     subs_dict[title].update({
             ts: (jp_caption, en_mapping[ts]) for ts, jp_caption in jp_mapping.iteritems() \
-                if ( en_mapping.get(ts) and not subs_dict[title].get(ts) and len(jp_caption) > 0 )
+                if ( en_mapping.get(ts) and not subs_dict[title].get(ts) ) and \
+                   ( len(jp_caption) > 0 and len(en_mapping[ts]) > 0 ) and \
+                   ( not is_english(jp_caption) and is_english(en_mapping[ts]) )
             })
-    
 
 
 root = sys.argv[1]
@@ -123,13 +127,6 @@ for title in tqdm(SUBS):
                          for en_sub, en_mapping in en_subs.iteritems() 
                     ])
 
-
-#            print title
-#            for p, f, _ in ranked_matches[::-1]:
-#                print f, p
-#            print
-
-        
             # add in matching subs from all files above the threshold   
             for i, (percent, en_filename, en_mapping) in enumerate(ranked_matches[::-1]):
                 if percent < MATCH_THRESHOLD:
@@ -144,7 +141,7 @@ for t in SUBS:
         print '%s-EN <%s>' % (ID, en)         
         print 
 
-#print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
+print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
 
 
 

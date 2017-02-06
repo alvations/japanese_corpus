@@ -136,14 +136,22 @@ def fix_spelling(s):
     """ NEED TO USE BIGRAM FREQS, THIS DOESN'T WORK!! """
     x =  ' '.join(spell(w) for w in s.split())
 
+def is_english(s):
+    """ tests whether a query string is all english characters
+    """
+    return all([c in string.printable for c in s])
+
 def add_subs_for_title(subs_dict, title, jp_mapping, en_title):
     """ extract matching subs from a {ts => caption} mapping, and add them into the dictionary iff
         there isn't already a translation available for that timestamp
     """
     subs_dict[title].update({
             ts: (jp_caption, en_mapping[ts]) for ts, jp_caption in jp_mapping.iteritems() \
-                if ( en_mapping.get(ts) and not subs_dict[title].get(ts) and len(jp_caption) > 0 )
+                if ( en_mapping.get(ts) and not subs_dict[title].get(ts) ) and \
+                   ( len(jp_caption) > 0 and len(en_mapping[ts]) > 0 ) and \
+                   ( not is_english(jp_caption) and is_english(en_mapping[ts]) )
             })
+
     
 def recurse_retrieve(root, *extensions):
     """ recursively searches a root directory and returns files
@@ -195,7 +203,7 @@ for t in SUBS:
         jp, en = SUBS[t][ts]
         print '%s-JP <%s>' % (ID, jp)
 #        print '%s-EN <%s>' % (ID, en) 
-        print '%s-EN <%s>' % (ID, ' '.join(spell(w) for w in r.reconstruct(en).split(' '))) 
+        print '%s-EN <%s>' % (ID, fix_spelling(r.reconstruct(en)))
         print
 #        print en
 #        print jp
