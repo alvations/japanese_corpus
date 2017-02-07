@@ -95,9 +95,12 @@ def add_subs_for_title(subs_dict, title, jp_mapping, en_mapping):
     """
     subs_dict[title].update({
             ts: (jp_caption, en_mapping[ts]) for ts, jp_caption in jp_mapping.iteritems() \
-                if ( en_mapping.get(ts) and not subs_dict[title].get(ts) ) and \
-                   ( len(jp_caption) > 0 and len(en_mapping[ts]) > 0 ) and \
-                   ( not is_english(jp_caption) and is_english(en_mapping[ts]) )
+                if en_mapping.get(ts) \
+                   and not subs_dict[title].get(ts) \
+                   and len(jp_caption) > 0 \
+                   and len(en_mapping[ts]) > 0 \
+                   and not is_english(jp_caption) \
+                   and is_english(en_mapping[ts])
             })
 
 
@@ -141,7 +144,7 @@ for t in SUBS:
         print '%s-EN <%s>' % (ID, en)         
         print 
 
-print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
+#print sum(len(SUBS[t][ts]) for t in SUBS for ts in SUBS[t])
 
 
 

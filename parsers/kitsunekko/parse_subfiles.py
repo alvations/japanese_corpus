@@ -47,7 +47,7 @@ from tqdm import tqdm
 import uuid
 from reconstruct import Reconstructor 
 from autocorrect import spell
-
+import string
 
 
 SRT_TS_PATTERN = '\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}'    # match timestamps in srt files
@@ -133,8 +133,9 @@ def prop_shared_keys(d1, d2):
     return num_shared_keys(d1, d2) / (len(d2) * 1.0)
 
 def fix_spelling(s):
-    """ NEED TO USE BIGRAM FREQS, THIS DOESN'T WORK!! """
+    """ levenschtein distance """
     x =  ' '.join(spell(w) for w in s.split())
+    return x
 
 def is_english(s):
     """ tests whether a query string is all english characters
@@ -147,11 +148,13 @@ def add_subs_for_title(subs_dict, title, jp_mapping, en_title):
     """
     subs_dict[title].update({
             ts: (jp_caption, en_mapping[ts]) for ts, jp_caption in jp_mapping.iteritems() \
-                if ( en_mapping.get(ts) and not subs_dict[title].get(ts) ) and \
-                   ( len(jp_caption) > 0 and len(en_mapping[ts]) > 0 ) and \
-                   ( not is_english(jp_caption) and is_english(en_mapping[ts]) )
+                if en_mapping.get(ts) \
+                   and not subs_dict[title].get(ts) \
+                   and len(jp_caption) > 0 \
+                   and len(en_mapping[ts]) > 0 \
+                   and not is_english(jp_caption) \
+                   and is_english(en_mapping[ts])
             })
-
     
 def recurse_retrieve(root, *extensions):
     """ recursively searches a root directory and returns files
@@ -203,7 +206,8 @@ for t in SUBS:
         jp, en = SUBS[t][ts]
         print '%s-JP <%s>' % (ID, jp)
 #        print '%s-EN <%s>' % (ID, en) 
-        print '%s-EN <%s>' % (ID, fix_spelling(r.reconstruct(en)))
+#        print '%s-EN <%s>' % (ID, fix_spelling(r.reconstruct(en)))    # not used -- doesn't seem like fix_spelling() adds that much over reconstruct()
+        print '%s-EN <%s>' % (ID, r.reconstruct(en))
         print
 #        print en
 #        print jp
