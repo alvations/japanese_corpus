@@ -1,4 +1,4 @@
-## 3M sentance pairs so far
+## 2.8M sentance pairs so far
 
 Number one TODO: first pass on everything is done. Now make everything more resilient and accurate. 
 
