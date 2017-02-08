@@ -17,9 +17,9 @@
 
 - 737 Japanese subbed dramas/movies
   - 4941 Japanese SRT/zip/rar files
+    - `cat crawlers/daddicts/download_links_ja.jsonlines | jq '.srt_urls[]' | wc -l`
 - 1883 English subbed dramas/movies
-- More than 10k SRT files
-  - `cat crawlers/daddicts/download_links.jsonlines | jq '.srt_urls[]' | wc -l`
+  - 19646 English SRT/zip/rar files
 
 Conservative estimates:
 
