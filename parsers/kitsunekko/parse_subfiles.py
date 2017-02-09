@@ -122,7 +122,7 @@ def parse_subfile(file_path):
 def extract_episode_info(filename):
     """many subs belong to tv shows, etc. this tries to pull out that episode info""" 
     ep_candidates = re.findall('[^\d](\d)[^\d]|[^\d](\d\d)[^\d]', filename)
-    print filename, ep_candidates
+    return filename, ep_candidates
 
 def num_shared_keys(d1, d2):
     """number of overlapping keys between two dicts"""
@@ -175,7 +175,6 @@ SUBS = {title: {} for title in os.listdir(root)}
 filetypes = defaultdict(lambda: 0)
 
 
-
 for title in tqdm(SUBS):
     title_subs = {}
     en_subs = recurse_retrieve(root + '/' + title + '/en/', '.srt', '.ass')
@@ -185,8 +184,9 @@ for title in tqdm(SUBS):
             title_subs[en_sub] = en_mapping
 
 
-    for jp_sub in os.listdir(root + '/' + title + '/jp/'):
-        jp_mapping = parse_subfile('%s/%s/%s/%s' % (root, title, 'jp', jp_sub))
+    jp_subs = recurse_retrieve(root + '/' + title + '/jp/', '.srt', '.ass')
+    for jp_sub in jp_subs:
+        jp_mapping = parse_subfile(jp_sub)
         if jp_mapping:
             # look at all complementary en sub files, sort them by % of matching subs
             ranked_matches = sorted([
