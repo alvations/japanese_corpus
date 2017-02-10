@@ -25,8 +25,8 @@ wget -nc -w 1 --random-wait -P en -i raw_links_en.txt
 
 Raw Files:
 
-- Japanese Subs https://drive.google.com/open?id=0B_bZck-ksdkpVTdESFhFYURqMzA
-- English Subs: https://drive.google.com/open?id=0B_bZck-ksdkpNzllSFBNOGM2blU
+- Japanese Subs (124MB) https://drive.google.com/open?id=0B_bZck-ksdkpVTdESFhFYURqMzA
+- English Subs (542MB): https://drive.google.com/open?id=0B_bZck-ksdkpNzllSFBNOGM2blU
 
 6\. Use information in the JSON data and SRT files itself to match English and Japanese Subtitles. Note, you can use the downlaod file ids to match files back to JSON records.
 
