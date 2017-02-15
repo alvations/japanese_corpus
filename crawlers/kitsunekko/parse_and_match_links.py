@@ -11,11 +11,6 @@ This script takes those files, makes a cross-language mapping from title to
 
 === USAGE
 python parse_and_match_links.py en_links.txt jp_links.txt
-
-
-TODO
-  - run it!
-  - AT 25TH TITLE!!
 """
 import sys
 import re

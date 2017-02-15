@@ -1,27 +1,6 @@
 """
-
-== xmltodict
-
-en_dict['xml']['file'][2]['head']['talkid']     = talk id
-                       ^ each file
-
-
-
-== import xml.etree.ElementTree as ET
-r[0][0][7].text        =   talk id
-  ^ file
-
-
-
 usage:
   python parse_xml_dump.py en_subs.xml jp_subs.xml
-
-
-TODO: 
-  - refactor
-  - clean subs  (strip newlines)
-  - better matching
-  - filter mismatches
 """
 
 

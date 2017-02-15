@@ -1,6 +1,3 @@
-
-
-
 from webbrowser import open_new_tab 
 import sys
 import re
