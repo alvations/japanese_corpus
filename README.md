@@ -1,15 +1,14 @@
-## 2.8M sentance pairs so far
+## 3471571 sentance pairs so far
 
 Number one TODO: first pass on everything is done. Now make everything more resilient and accurate. 
 
 | Source                                                                                                     | Notes                                                                                                            | Status                                          |
 |----------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
-| [d-addicts](http://www.d-addicts.com/forums/page/subtitles?sid=c00e06662e59c449c2b2814b22e7bc90#Japanese) | * ~600 dramas, ~5M sentance pairs,<br>  * fansubs,<br> * japanese & english subs in different parts of same page | * **crawled**<br/>* **parsed** <br/>* **matched**                                     |
-| [OpenSubtitles](http://opus.lingfil.uu.se/OpenSubtitles2016.php)                                         | * 1.4M sentance pairs,<br> * professional translations, 1-1 en/jp matching (in same file)                        | * **crawled**<br/>* **parsed**<br/>* **matched**  |
-| [kitsunekko](http://kitsunekko.net/dirlist.php?dir=subtitles%2Fjapanese%2F)                              | * ~600 dramas/movies (largeley incomplete), ~3M pairs<br> * fansubs<br> * en/jp lists on different pages         | * **crawled**<br/>* **parsed**<br/>* **matched(?)**  |
-| [subscene](http://v2.subscene.com/subtitles/a/japanese.aspx)                                             | * ~2000 movies/shows, ~5M raw sentance pairs, ~1.3M usable pairs<br> * mix of fansubs & professional translations                       | * **crawled**<br/>* **parsed**<br/>* **matched(?)**  |
-| [TED talks](https://www.ted.com/talks) | ~100k pairs | * **crawled**<br/> * **parsed**<br/>* **matched**  |
-
+| [d-addicts](http://www.d-addicts.com/forums/page/subtitles?sid=c00e06662e59c449c2b2814b22e7bc90#Japanese) | * ~600 dramas, ~5M sentance pairs,<br>  * fansubs,<br> * japanese & english subs in different parts of same page | * **crawled**<br/>* **parsed** <br/>* **matched**<br/>* 620408                                  |
+| [OpenSubtitles](http://opus.lingfil.uu.se/OpenSubtitles2016.php)                                         | * 1.4M sentance pairs,<br> * professional translations, 1-1 en/jp matching (in same file)                        | * **crawled**<br/>* **parsed**<br/>* **matched**<br/>* 1381339  |
+| [kitsunekko](http://kitsunekko.net/dirlist.php?dir=subtitles%2Fjapanese%2F)                              | * ~600 dramas/movies (largeley incomplete), ~3M pairs<br> * fansubs<br> * en/jp lists on different pages         | * **crawled**<br/>* **parsed**<br/>* **matched(?)** <br/> * 161792 |
+| [subscene](http://v2.subscene.com/subtitles/a/japanese.aspx)                                             | * ~2000 movies/shows, ~5M raw sentance pairs, ~1.3M usable pairs<br> * mix of fansubs & professional translations                       | * **crawled**<br/>* **parsed**<br/>* **matched(?)** <br/> 810678 |
+| [TED talks](https://www.ted.com/talks) | ~100k pairs | * **crawled**<br/> * **parsed**<br/>* **matched** </br>* 497294 |
 
 ### Numbers to beat
 
