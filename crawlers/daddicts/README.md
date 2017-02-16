@@ -3,6 +3,29 @@
 - Jupyer Notebook
 - Selenium: `pip install selenium`
 - Chrome webdriver: `brew install ChromeDriver`
+- SRT/ASS libraries: `pip install pysrt ass`
+
+### Results/Files
+
+- Aligned Sentences (~600k): https://drive.google.com/open?id=0B_bZck-ksdkpWW5SOTJqS0R1eVk
+  - Not cleaned
+- Cleaned Subtitles (260MB): https://drive.google.com/open?id=0B_bZck-ksdkpRmlNQmNISWN2OFU
+  - Added `.srt` and `.ass` file extensions
+  - Removed duplicate files
+  - Removed files that are not SRT or ASS subtitles
+- Raw Subtitle Downloads:
+  - Not cleaned
+  - Japanese Subs (124MB) https://drive.google.com/open?id=0B_bZck-ksdkpVTdESFhFYURqMzA
+  - English Subs (542MB): https://drive.google.com/open?id=0B_bZck-ksdkpNzllSFBNOGM2blU
+
+
+### What could be improved
+
+- Subtitle distance metric (currently using Hamming distance) could be changed. See [cdist](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html) for available metrics.
+- Distance threshold can be tuned to be more strict/lenient with matching
+- Handle downloaded zip/rar/tar/archive files that may contain multiple subtitles titles. Currently these are thrown away.
+- Better data cleaning.
+
 
 ### Crawling Process
 
@@ -23,13 +46,7 @@ wget -nc -w 1 --random-wait -P ja -i raw_links_ja.txt
 wget -nc -w 1 --random-wait -P en -i raw_links_en.txt
 ```
 
-Raw Files:
-
-- Japanese Subs (124MB) https://drive.google.com/open?id=0B_bZck-ksdkpVTdESFhFYURqMzA
-- English Subs (542MB): https://drive.google.com/open?id=0B_bZck-ksdkpNzllSFBNOGM2blU
-
 6\. Use information in the JSON data and SRT files itself to match English and Japanese Subtitles. Note, you can use the downlaod file ids to match files back to JSON records.
-
 
 ### Some Statistics
 
