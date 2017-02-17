@@ -30,11 +30,6 @@ I'd like to make this the biggest open-source Japanese-English corpus out there.
 * stuff that doesn't belong (i.e. "TRANSLATED BY ______")
 
 
-### model publications
-
-* https://wit3.fbk.eu/papers/WIT3-EAMT2012.pdf
-* http://stp.lingfil.uu.se/~joerg/paper/opensubs2016.pdf
-* http://www.ccl.kuleuven.be/~tallem/Paper_Belgisch_Staatsblad_Corpus.pdf
 
 
 
