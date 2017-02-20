@@ -1,10 +1,3 @@
-"""
-adapted from my cs221 pset solution
-
-"""
-
-
-
 import collections
 import math
 import argparse
