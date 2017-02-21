@@ -8,5 +8,5 @@ This paper [[PDF]](https://pdfs.semanticscholar.org/d7a4/97cd9de61617ba55002d0db
 
 It's pretty straightforward. It basically works by counting the number of tokens that could be a translation pair and normalizing twice (once by possible num translation pairs for each token, and again by num tokens in the target sentences).
 
-![Algorithm description]()
+![Algorithm description](https://raw.githubusercontent.com/rpryzant/japanese_corpus/master/aligners_cleaners/token_aligner/static/fig1.png)
 
