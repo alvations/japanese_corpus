@@ -6,7 +6,11 @@ This paper [[PDF]](https://pdfs.semanticscholar.org/d7a4/97cd9de61617ba55002d0db
 
 ## Algorithm Description
 
-It's pretty straightforward. It basically works by counting the number of tokens that could be a translation pair and normalizing twice (once by possible num translation pairs for each token, and again by num tokens in the target sentences).
+It's pretty straightforward. It basically works by counting the number of tokens that could be a translation pair and normalizing twice (once by possible num translation pairs for each token, and again by num tokens in the target sentences). Note, though, the following preproccessing steps 
+
+* Tokenize JP, EN sentences
+* Extract *content words* from the JP sentence (nouns, roots of verbs, adjectives. No okurigana)
+* Obtain *lemmas* of words in the EN sentence
 
 ![Algorithm description](https://raw.githubusercontent.com/rpryzant/japanese_corpus/master/aligners_cleaners/token_aligner/static/fig1.png)
 
