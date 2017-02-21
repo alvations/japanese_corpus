@@ -12,5 +12,9 @@ It's pretty straightforward. It basically works by counting the number of tokens
 * Extract *content words* from the JP sentence (nouns, roots of verbs, adjectives. No okurigana)
 * Obtain *lemmas* of words in the EN sentence
 
+These JP content words and EN lemmas for each sentence pair are the `J_i` and `E_i` referred to below.
+<br/>
+<br/>
+
 ![Algorithm description](https://raw.githubusercontent.com/rpryzant/japanese_corpus/master/aligners_cleaners/token_aligner/static/fig1.png)
 
