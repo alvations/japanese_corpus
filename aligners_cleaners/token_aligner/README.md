@@ -18,3 +18,16 @@ These JP content words and EN lemmas for each sentence pair are the `J_i` and `E
 
 ![Algorithm description](https://raw.githubusercontent.com/rpryzant/japanese_corpus/master/aligners_cleaners/token_aligner/static/fig1.png)
 
+
+
+## Morphological Analyzers
+
+I need one of these to chunk and extract content words.
+
+| Name        | Link                                                                                                                                                        | Status                                                                                 |
+|-------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| Kuromoji    | [github](https://github.com/atilika/kuromoji/downloads)                                                                                                     | * Java<br/> * Tried and **rejected** (too hard to get working, and I don't like java)  |
+| kagome      | [github](https://github.com/ikawaha/kagome)                                                                                                                 | * Go                                                                                   |
+| ChaSen      | [homepage (JP)](http://chasen-legacy.osdn.jp/)                                                                                                              | * Used in original papers, but old (circa 2004)                                        |
+| **Rakuten** | [PIP](https://pypi.python.org/pypi/rakutenma)  [github](https://github.com/rakuten-nlp/rakutenma)   [paper](http://anthology.aclweb.org/C/C14/C14-2009.pdf) | * seems like this might be my best bet                                                 |
+|             |                                                                                                                                                             |                                                                                        |
