@@ -31,3 +31,10 @@ I need one of these to chunk and extract content words.
 | ChaSen      | [homepage (JP)](http://chasen-legacy.osdn.jp/)                                                                                                              | * Used in original papers, but old (circa 2004)                                        |
 | **Rakuten** | [PIP](https://pypi.python.org/pypi/rakutenma)  [github](https://github.com/rakuten-nlp/rakutenma)   [paper](http://anthology.aclweb.org/C/C14/C14-2009.pdf) | * seems like this might be my best bet                                                 |
 |             |                                                                                                                                                             |                                                                                        |
+
+
+
+
+## Resources 
+- https://github.com/johnoneil/jpn/
+
