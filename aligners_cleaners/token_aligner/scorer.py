@@ -128,10 +128,13 @@ class Dictionary():
 
 
     def is_translation_pair(self, en, ja):
-        return 1 if (ja in self.en_to_ja[en] or \
-                         en in ' '.join(x for x in self.ja_to_en[ja])) \
-                         else 0
-
+        try:
+            return 1 if (ja in self.en_to_ja[en] or \
+                             en in ' '.join(x for x in self.ja_to_en[ja])) \
+                             else 0
+        except UnicodeDecodeError:
+            # if there's a non-ascii in the en stuff, return 0 (en should be all plaintext)
+            return 0
 
 
 class PairScorer():
@@ -200,7 +203,7 @@ class PairScorer():
                 s += (self.dict.is_translation_pair(en_w, ja_w) / \
                           (self.degree(en_w, ja_s) * self.degree(ja_w, en_s, mode='ja') or 1))
 
-        s = s * 2.0 / (len(en_s) + len(ja_s))
+        s = s * 2.0 / ((len(en_s) + len(ja_s)) or 1)
         return s
 
 
