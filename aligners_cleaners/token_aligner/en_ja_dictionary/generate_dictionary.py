@@ -2,10 +2,6 @@
 python generate_dictionary.py kanji_dict name_dict
 
 TODO - REFACTOR BIG TIME
-
-use https://pypi.python.org/pypi/myougiden
-use http://www.dicts.info/uddl.php
-
 """
 
 
