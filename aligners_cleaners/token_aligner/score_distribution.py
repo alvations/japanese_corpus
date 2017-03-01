@@ -20,7 +20,7 @@ ps = PairScorer('en_ja_dictionary/raw_kv_pairs', 'rakuten_model_ja.min.json')
 
 total = int(os.popen('wc -l %s' % sys.argv[1]).read().strip().split()[0])
 
-s = ','.join(ps.score(en.strip(), ja.strip()) for en, ja in tqdm(zip(combined_en, combined_ja), total=total))
+s = ','.join(str(ps.score(en.strip(), ja.strip())) for en, ja in tqdm(zip(combined_en, combined_ja), total=total))
 
 out = open(sys.argv[3], 'w')
 out.write(s)

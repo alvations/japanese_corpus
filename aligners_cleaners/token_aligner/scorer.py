@@ -194,17 +194,22 @@ class PairScorer():
             this metric is essentially the number of shared words between the sentences,
             normalized by total number of shared words and length of sentence
         """
-        en_s = self.extract_en_content_lemmas(en_s)
-        ja_s = self.extract_ja_content_lemmas(ja_s)
+        try:
+            en_s = self.extract_en_content_lemmas(en_s)
+            ja_s = self.extract_ja_content_lemmas(ja_s)
 
-        s = 0
-        for en_w in en_s:
-            for ja_w in ja_s:
-                s += (self.dict.is_translation_pair(en_w, ja_w) / \
-                          (self.degree(en_w, ja_s) * self.degree(ja_w, en_s, mode='ja') or 1))
+            s = 0
+            for en_w in en_s:
+                for ja_w in ja_s:
+                    s += (self.dict.is_translation_pair(en_w, ja_w) / \
+                              (self.degree(en_w, ja_s) * self.degree(ja_w, en_s, mode='ja') or 1))
 
-        s = s * 2.0 / ((len(en_s) + len(ja_s)) or 1)
-        return s
+            s = s * 2.0 / ((len(en_s) + len(ja_s)) or 1)
+            return s
+        # TODO FIGURE THIS BUG OUT - line 51: " utf8' codec can't decode byte 0x83 "
+        except:
+            return 0
+
 
 
 if __name__ == '__main__':
