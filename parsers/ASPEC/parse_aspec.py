@@ -8,7 +8,6 @@ This script takes an ASPEC corpus file as input, and produces
 python parse_aspec.py [input file] [en output] [ja output]
 """
 from rakutenma import RakutenMA
-from nltk.tokenize.moses import MosesTokenizer
 import sys
 import os
 import codecs
@@ -17,13 +16,12 @@ import json
 input = open(sys.argv[1])
 en_out = sys.argv[2]
 ja_out = sys.argv[3]
-model = sys.argv[4] if len(sys.argv) == 4 else 'rakuten_model_ja.min.json'
+model = 'rakuten_model_ja.min.json' if len(sys.argv) < 4 else sys.argv[4]
 
 
 # bulid tokenizers
 ja_tokenizer = RakutenMA(json.loads(open(model).read()))
 ja_tokenizer.hash_func = RakutenMA.create_hash_func(ja_tokenizer, 15)
-en_tokenizer = MosesTokenizer()
 
 
 en_outfile = codecs.open('tmp', 'w', 'utf-8') 
