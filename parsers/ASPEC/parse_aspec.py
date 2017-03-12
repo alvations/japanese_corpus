@@ -49,11 +49,11 @@ def process(f):
 
 
     # tokenize en with moses
-    os.system('perl moses_tokenizer.perl -l en -threads 8 < %s > %s' % ('tokenized/en_tmp.' + suffix, 'tokenized/en.' + suffix))
+    os.system('perl mosesdecoder/scripts/tokenizer/tokenizer.perl -l en -threads 8 < %s > %s' % ('tokenized/en_tmp.' + suffix, 'tokenized/en.' + suffix))
 
-
-
-
+# get moses
+if not os.path.exists('mosesdecoder'):
+    os.system('git clone https://github.com/moses-smt/mosesdecoder.git')
 os.system('rm -r split_files; mkdir split_files')
 os.system('rm -r tokenized; mkdir tokenized')
 os.system('split -l 50000 %s split_files/train.' % sys.argv[1])
