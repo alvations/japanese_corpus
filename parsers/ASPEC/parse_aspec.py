@@ -51,13 +51,24 @@ def process(f):
     # tokenize en with moses
     os.system('perl mosesdecoder/scripts/tokenizer/tokenizer.perl -l en -threads 8 < %s > %s' % ('tokenized/en_tmp.' + suffix, 'tokenized/en.' + suffix))
 
-# get moses
-if not os.path.exists('mosesdecoder'):
-    os.system('git clone https://github.com/moses-smt/mosesdecoder.git')
+
+# split and tokenize
 os.system('rm -r split_files; mkdir split_files')
 os.system('rm -r tokenized; mkdir tokenized')
 os.system('split -l 50000 %s split_files/train.' % sys.argv[1])
-
-
-
 Parallel(n_jobs=4)(delayed(process)(f) for f in os.listdir('split_files/') if f.startswith('train.'))
+
+
+# join splits
+split_order = []
+for f in os.listdir('tokenized'):
+
+    if 'ja' in f:
+        split_order.append(f.split('.')[1])
+
+ja_cat = 'cat ' + ' '.join('tokenized/ja.%s' % split for split in split_order) + ' > tokenized/ja.tok'
+en_cat = 'cat ' + ' '.join('tokenized/en.%s' % split for split in split_order) + ' > tokenized/en.tok'
+
+
+os.system(ja_cat)
+os.system(en_cat)
