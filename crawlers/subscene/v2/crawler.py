@@ -6,8 +6,6 @@ split -l 1000 ja.txt ja_split.
 """
 # coding: utf-8
 
-# In[ ]:
-
 import sys
 from selenium import webdriver
 import os
@@ -19,8 +17,6 @@ import re
 import shutil
 from joblib import Parallel, delayed
 from tqdm import tqdm
-
-# In[114]:
 
 def file_length(f):
     return int(os.popen('wc -l %s' % f).read().strip().split()[0])
@@ -54,8 +50,6 @@ def download_subfile(url, name, dest):
     return target
 
 
-# In[115]:
-
 def convert_all_to_srt(dir):
     def convert_to_srt(target, dest):
         ff = FFmpeg(
@@ -73,17 +67,16 @@ def convert_all_to_srt(dir):
 #            print 'ERROR: CONVERSION FAILURE ON', f
 
 
-# In[116]:
-
 def extract_archive(target, dest):
     # unzip if archive
-    filetype = magic.from_file(target).lower()
-    if 'zip' in filetype or 'rar' in filetype or 'tar' in filetype:
-        Archive(target).extractall(dest)       
+#    filetype = magic.from_file(target).lower()
+#    if 'zip' in filetype or 'rar' in filetype or 'tar' in filetype:
+    try:
+        Archive(target).extractall(dest)
+    except:
+        pass
 #        print 'EXTRACTED: ', target
 
-
-# In[117]:
 
 def dl_and_convert(dest, url, title):
     dlded_filepath = download_subfile(url, title, dest)
@@ -95,16 +88,17 @@ def dl_and_convert(dest, url, title):
         return False
 
 
-# In[118]:
-
 url_base = lambda url: re.findall("https://subscene.com/subtitles/(.*)/[japanese|english]", url)[0]
 base_dir = 'out'
 
-def process_url(url):
+def process_url(url, language):
     try:
         print 'STARTING ', url
         title = url_base(url)
-        dest = os.path.join(base_dir, title, 'ja')
+        if not os.path.exists(os.path.join(base_dir, title)) and language == 'en':
+            print 'SKIPPED: not covered by ja'
+            return
+        dest = os.path.join(base_dir, title, language)
         if dl_and_convert(dest, url, title):
             print 'SUCCESS ON', url
         else:
@@ -114,25 +108,19 @@ def process_url(url):
         print 'MYSTERIOUS FAILURE ON: ', url, ' WITH EXCEPTION ', e
 
 
-# In[ ]:
-
-en_urls = open('urls/en.txt')
-ja_urls = open(sys.argv[1])   # take from cli
+urls = sys.argv[1]
+url_f = open(urls)
+language = 'ja' if 'ja' in urls else 'en'
+url_base = lambda url: re.findall("https://subscene.com/subtitles/(.*)/[japanese|english]", url)[0]
 driver = webdriver.Chrome()
 
-url_base = lambda url: re.findall("https://subscene.com/subtitles/(.*)/[japanese|english]", url)[0]
 
-base_dir = 'out'
-
-#process_url('https://subscene.com/subtitles/weightlifting-fairy-kim-bok-joo-2016/japanese/1468874')
-
-for url in tqdm(ja_urls, total=file_length(sys.argv[1])):
-    process_url(url)
-
+for url in tqdm(url_f, total=file_length(sys.argv[1])):
+    process_url(url, language)
+    quit()
 #Parallel(n_jobs=4)(delayed(process_url)(url) for url in ja_urls)
 
 
-# In[ ]:
 
 
 
