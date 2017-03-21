@@ -29,3 +29,8 @@ python crawler.py urls/en.txt > EN_LOG
 3. Download each result page
 4. Follow steps outlined in `../v1/` to get download pages (in `urls/`)
 5. download each resource, unzip, and convert to SRT with `crawler.py`
+
+
+### Resources
+
+* might be useful: http://sapir.psych.wisc.edu/wiki/index.php/Extracting_and_analyzing_subtitles
