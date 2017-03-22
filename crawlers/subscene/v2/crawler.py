@@ -77,12 +77,16 @@ def extract_archive(target, dest):
         pass
 #        print 'EXTRACTED: ', target
 
+def rm_exclude(dir, suffix):
+    os.system("find %s -type f ! -name '*%s' -delete" % (dir, suffix))
+
 
 def dl_and_convert(dest, url, title):
     dlded_filepath = download_subfile(url, title, dest)
     if dlded_filepath:
         output = extract_archive(dlded_filepath, dest)
         convert_all_to_srt(dest)
+        rm_exclude(dest, '.srt')
         return True
     else:
         return False
