@@ -91,17 +91,39 @@ def dl_and_convert(dest, url, title):
     else:
         return False
 
+def should_skip(base_dir, title, language):
+    """ a title should be skipped if it's english AND one of the 
+        following cases holds:
+             - there's not ja subs for the title
+             - if the title is already done
+
+    """
+
+    if language == 'en':
+        # skip if there's no ja subs for this title
+        if not os.path.exists(os.path.join(base_dir, title)):
+            return True
+
+        # skip if this title is already done
+        else:
+            en_sub_dir = os.path.join(base_dir, title, 'en')
+            en_subs = os.listdir(en_sub_dir)
+            if any(map(lambda x: 'srt' in x, en_subs)):
+                return True
+
+        return False
+
 
 url_base = lambda url: re.findall("https://subscene.com/subtitles/(.*)/[japanese|english]", url)[0]
 base_dir = 'out'
 
 def process_url(url, language):
     try:
-        print 'STARTING ', url
         title = url_base(url)
-        if not os.path.exists(os.path.join(base_dir, title)) and language == 'en':
-            print 'SKIPPED: not covered by ja'
+        if should_skip(base_dir, title, language):
+            print 'SKIPPED ', url
             return
+        return
         dest = os.path.join(base_dir, title, language)
         if dl_and_convert(dest, url, title):
             print 'SUCCESS ON', url
@@ -117,11 +139,14 @@ url_f = open(urls)
 language = 'ja' if 'ja' in urls else 'en'
 url_base = lambda url: re.findall("https://subscene.com/subtitles/(.*)/[japanese|english]", url)[0]
 driver = webdriver.Chrome()
+driver.set_page_load_timeout(10)   # 10 second limit 
 
 
-for url in tqdm(url_f, total=file_length(sys.argv[1])):
+for i, url in tqdm(enumerate(url_f), total=file_length(sys.argv[1])):
+#    if i < 33747:
+#        continue
     process_url(url, language)
-    quit()
+
 #Parallel(n_jobs=4)(delayed(process_url)(url) for url in ja_urls)
 
 
