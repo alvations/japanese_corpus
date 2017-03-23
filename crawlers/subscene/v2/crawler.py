@@ -105,13 +105,14 @@ def should_skip(base_dir, title, language):
             return True
 
         # skip if this title is already done
-        else:
-            en_sub_dir = os.path.join(base_dir, title, 'en')
-            en_subs = os.listdir(en_sub_dir)
-            if any(map(lambda x: 'srt' in x, en_subs)):
-                return True
+        # SAVING FOR DOUBLE CHECK RUN
+#        else:
+#            en_sub_dir = os.path.join(base_dir, title, 'en')
+#            en_subs = os.listdir(en_sub_dir)
+#            if any(map(lambda x: 'srt' in x, en_subs)):
+#                return True
 
-        return False
+#        return False
 
 
 url_base = lambda url: re.findall("https://subscene.com/subtitles/(.*)/[japanese|english]", url)[0]
@@ -123,12 +124,11 @@ def process_url(url, language):
         if should_skip(base_dir, title, language):
             print 'SKIPPED ', url
             return
-        return
+
         dest = os.path.join(base_dir, title, language)
         if dl_and_convert(dest, url, title):
             print 'SUCCESS ON', url
         else:
-#            shutil.rmtree(os.path.join(base_dir, title))
             print 'FAILURE ON ', url
     except Exception as e:
         print 'MYSTERIOUS FAILURE ON: ', url, ' WITH EXCEPTION ', e
@@ -143,8 +143,8 @@ driver.set_page_load_timeout(10)   # 10 second limit
 
 
 for i, url in tqdm(enumerate(url_f), total=file_length(sys.argv[1])):
-#    if i < 33747:
-#        continue
+    if i < 34364:
+        continue
     process_url(url, language)
 
 #Parallel(n_jobs=4)(delayed(process_url)(url) for url in ja_urls)
