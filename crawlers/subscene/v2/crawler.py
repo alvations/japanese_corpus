@@ -1,6 +1,7 @@
 """
-cd urls
-split -l 1000 ja.txt ja_split.
+=== USAGE
+python crawler.py urls/ja.txt > JA_LOG
+python crawler.py urls/en.txt > EN_LOG
 
 
 """
