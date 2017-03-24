@@ -143,7 +143,7 @@ driver.set_page_load_timeout(10)   # 10 second limit
 
 
 for i, url in tqdm(enumerate(url_f), total=file_length(sys.argv[1])):
-    if i < 34364:
+    if i < 38665:
         continue
     process_url(url, language)
 
