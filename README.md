@@ -17,7 +17,6 @@ We harvested these data by
 | [OpenSubtitles](http://opus.lingfil.uu.se/OpenSubtitles2016.php)                                         | * 1.4M sentance pairs,<br> * professional translations, 1-1 en/jp matching (in same file)                        | * **crawled**<br/>* **parsed**<br/>* **matched**<br/>* * 1381339 pairs  |
 | [kitsunekko](http://kitsunekko.net/dirlist.php?dir=subtitles%2Fjapanese%2F)                              | * ~600 dramas/movies (largeley incomplete), ~3M pairs<br> * fansubs<br> * en/jp lists on different pages         | * **crawled**<br/>* **parsed**<br/>* **matched(?)** <br/> * 161792 |
 | [subscene](http://v2.subscene.com/subtitles/a/japanese.aspx)                                             | * ~2000 movies/shows, ~5M raw sentance pairs, ~1.3M usable pairs<br> * mix of fansubs & professional translations                       | * **crawled**<br/>* **parsed**<br/>* **matched(?)** <br/> * 810678 pairs |
-| [TED talks](https://www.ted.com/talks) | ~100k pairs | * **crawled**<br/> * **parsed**<br/>* **matched** </br>* 497294 pairs |
 
 ### Numbers to beat
 
