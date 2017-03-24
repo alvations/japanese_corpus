@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[4]:
+# In[2]:
 
 import pysrt
 import sys
@@ -13,7 +13,7 @@ import collections
 from tqdm import tqdm
 
 
-# In[31]:
+# In[3]:
 
 
 def is_overlap(ival_a, ival_b):
@@ -143,7 +143,7 @@ def extract_subs_for_title(title_dir, coverage_threshold):
     return out
 
 
-# In[32]:
+# In[4]:
 
 root = 'out'
 
@@ -158,10 +158,11 @@ for title in os.listdir(root):
     
 for title, ts_caption_mapping in SUBS.items():
     for ts, caption in ts_caption_mapping.items():
+        pass
 #        print caption
-        print caption['ja']
-        print caption['en']
-        print
+#        print caption['ja']
+#        print caption['en']
+#        print
 
 
 # In[ ]:
