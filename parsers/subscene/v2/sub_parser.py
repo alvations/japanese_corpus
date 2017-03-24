@@ -13,7 +13,7 @@ import collections
 from tqdm import tqdm
 
 
-# In[3]:
+# In[9]:
 
 
 def is_overlap(ival_a, ival_b):
@@ -91,23 +91,13 @@ def gather_mappings(lang_dir):
     return out
 
 
-def extract_subs_for_title(title_dir, coverage_threshold):
-    """ parse and align subs for a title
-    
-        precondition:
-            title_dir/
-                en/
-                    en .srt files
-                ja/
-                    ja .srt files
+def align_files(title_dir, ja_sub_mappings, en_sub_mappings):
+    """ align two sets of parsed .srt files, and 
+        return their matched subtitles, sorted by 
+        similarity
+        
+        returns: (score, [matches], ja srt path, en srt path)
     """
-    print 'STARTING ', title_dir
-    
-    print '\t PARSING .srt FILES...'
-    ja_sub_mappings = gather_mappings(os.path.join(title_dir, 'ja'))
-    en_sub_mappings = gather_mappings(os.path.join(title_dir, 'en'))
-    
-    print '\t ALIGNING SUBS...'
     match_candidates = []
     for (ja_title, ja_subs) in ja_sub_mappings.items():
         for (en_title, en_subs) in en_sub_mappings.items():
@@ -119,12 +109,23 @@ def extract_subs_for_title(title_dir, coverage_threshold):
                 os.path.join(title_dir, 'en', en_title),
             ) )
     match_candidates = sorted(match_candidates)[::-1]
+    return match_candidates
 
-    print '\t EXTRACTING BEST MATCHES...'
+
+def extract_matches(match_candidates):
+    """ harvest aligned captions from matched srt files
+    
+        returns: {
+                   timestamp: {
+                        'ja': ja caption
+                        'en': en caption
+                        'overlap': timedelta
+                     }
+                  }
+    """
     out = {}
     i = 0
     while match_candidates[i][0] > coverage_threshold:
-        print '\t\t working on file ', i
         coverage, matches, ja_path, en_path = match_candidates[i]
         for ja_ival, match in matches.items():
             ja_caption = match['ja_caption']
@@ -143,7 +144,31 @@ def extract_subs_for_title(title_dir, coverage_threshold):
     return out
 
 
-# In[4]:
+
+def extract_subs_for_title(title_dir, coverage_threshold):
+    """ parse and align subs for a title
+    
+        precondition:
+            title_dir/
+                en/
+                    en .srt files
+                ja/
+                    ja .srt files
+    """
+    print 'STARTING ', title_dir
+    
+    print '\t PARSING .srt FILES...'
+    ja_sub_mappings = gather_mappings(os.path.join(title_dir, 'ja'))
+    en_sub_mappings = gather_mappings(os.path.join(title_dir, 'en'))
+    
+    print '\t ALIGNING SUBS...'
+    match_candidates = align_files(title_dir, ja_sub_mappings, en_sub_mappings)
+
+    print '\t EXTRACTING BEST MATCHES...'
+    return extract_matches(match_candidates)
+
+
+# In[10]:
 
 root = 'out'
 
@@ -160,9 +185,9 @@ for title, ts_caption_mapping in SUBS.items():
     for ts, caption in ts_caption_mapping.items():
         pass
 #        print caption
-#        print caption['ja']
-#        print caption['en']
-#        print
+        print caption['ja']
+        print caption['en']
+        print
 
 
 # In[ ]:
