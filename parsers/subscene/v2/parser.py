@@ -205,7 +205,7 @@ def extract_matches(match_candidates):
     """
     out = {}
     i = 0
-    while match_candidates[i][0] > coverage_threshold:
+    while i < len(match_candidates) and match_candidates[i][0] > coverage_threshold:
         coverage, matches, ja_path, en_path = match_candidates[i]
         for ja_ival, match in matches.items():
             ja_caption = match['ja_caption']
@@ -256,11 +256,11 @@ def extract_subs_for_title(title_dir, coverage_threshold):
     for ts, caption in matches.items():
         en += caption['en'] + '\n'
         ja += caption['ja'] + '\n'
-    print '\t WRITING RESULTS TO ', title + '|en|subs'
-    with open(title + '|en|subs', 'w') as f:
+    print '\t WRITING RESULTS TO ', title + '_en_subs'
+    with open(title + '_en_subs', 'w') as f:
         f.write(en.encode('utf8'))
-    print '\t WRITING RESULTS TO ', title + '|ja|subs'
-    with open(title + '|ja|subs', 'w') as f:
+    print '\t WRITING RESULTS TO ', title + '_ja_subs'
+    with open(title + '_ja_subs', 'w') as f:
         f.write(ja.encode('utf8'))
 
 
@@ -277,18 +277,18 @@ def main(data_loc, en_out, ja_out, num_threads):
     print 'JOINING RESULTS...'
     split_order = []
     for f in os.listdir('.'):
-        if '|subs' in f:
-            split_order.append(f.split('|')[0])
+        if '_subs' in f:
+            split_order.append(f.split('_')[0])   # TODO - BETER SPLITTER
 
-    en_cat = 'cat ' + ' '.join('%s|en|subs' % title for title in split_order) + ' > %s' % en_out
-    ja_cat = 'cat ' + ' '.join('%s|ja|subs' % title for title in split_order) + ' > %s' % ja_out
+    en_cat = 'cat ' + ' '.join('%s_en_subs' % title for title in split_order) + ' > %s' % en_out
+    ja_cat = 'cat ' + ' '.join('%s_ja_subs' % title for title in split_order) + ' > %s' % ja_out
 
     os.system(ja_cat)
     os.system(en_cat)
 
 
     print 'CLEANING UP...'
-#    os.system('rm *|subs')
+    os.system('rm *_subs')
 
     print 'DONE'
 

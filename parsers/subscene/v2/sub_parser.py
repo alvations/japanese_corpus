@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[2]:
+# In[7]:
 
 import pysrt
 import sys
@@ -11,10 +11,39 @@ import os
 import datetime
 import collections
 from tqdm import tqdm
+import re
+import string
+
+
+# In[8]:
+
+def clean_caption(x):
+    x = x.strip()                            # strip ends
+    x = x.lower()                            # lowercase
+
+    brackets       = re.compile('\<.*?\>|{.*?}|\(.*?\)')
+    newlines       = re.compile('\\\\n|\n')
+    site_signature = re.compile('.*subtitles.*\n?|.*subs.*\n?', re.IGNORECASE)
+    urls           = re.compile('www.*\s\n?|[^\s]*\. ?com\n?')
+    msc            = re.compile('\\\\|\t|\\\\t|\r|\\\\r')
+    encoding_error = re.compile('0000,0000,0000,\w*?')
+    multi_space    = re.compile('[ ]+')
+    
+    x = brackets.sub('', x)
+    x = newlines.sub(' ', x)
+    x = site_signature.sub('', x)
+    x = urls.sub('', x)
+    x = msc.sub('', x)
+    x = encoding_error.sub('', x)
+    x = multi_space.sub(' ', x)
+    return x
+
+def all_english(s):
+    return all([c in string.printable for c in s])
+    
 
 
 # In[9]:
-
 
 def is_overlap(ival_a, ival_b):
     start_a, end_a = ival_a
@@ -27,6 +56,32 @@ def overlap_size(ival_a, ival_b):
     start_a, end_a = ival_a
     start_b, end_b = ival_b
     return min(end_a, end_b) - max(start_a, start_b)
+
+
+# In[10]:
+
+def ts_caption_mapping(f):
+    """ produce {(interval): caption} mapping for a file
+    """
+    def sub_ival(sub):
+        pivot = datetime.date(2017, 01, 01)
+        return datetime.datetime.combine(pivot, sub.start.to_time()),                datetime.datetime.combine(pivot, sub.end.to_time())
+    
+    subs = pysrt.open(f)
+    out = {}
+    for sub in subs:
+        if len(sub.text_without_tags) > 0:
+            out[sub_ival(sub)] = clean_caption(sub.text_without_tags)
+    return out
+
+
+def gather_mappings(lang_dir):
+    """ produce {subfile: {(interval): caption}} mappings for a directory
+    """
+    out = {}
+    for subfile in os.listdir(lang_dir):
+        out[subfile] = ts_caption_mapping(os.path.join(lang_dir, subfile))
+    return out
 
 
 def score_and_match(ja_ts_map, en_ts_map):
@@ -49,6 +104,9 @@ def score_and_match(ja_ts_map, en_ts_map):
     ja_matches = 0
     matches = {}
     for ja_ival, ja_caption in ja_ts_map.items():
+        if all_english(ja_caption):
+            print 'SKIPPING ', ja_caption
+
         matches[ja_ival] = {
             'ja_caption': ja_caption,
             'en_matches': []
@@ -68,28 +126,8 @@ def score_and_match(ja_ts_map, en_ts_map):
     return ja_matches * 1.0 / len(ja_ts_map), matches
 
 
-def ts_caption_mapping(f):
-    """ produce {(interval): caption} mapping for a file
-    """
-    def sub_ival(sub):
-        pivot = datetime.date(2017, 01, 01)
-        return datetime.datetime.combine(pivot, sub.start.to_time()),                datetime.datetime.combine(pivot, sub.end.to_time())
-    
-    subs = pysrt.open(f)
-    out = {}
-    for sub in subs:
-        out[sub_ival(sub)] = sub.text_without_tags
-    return out
 
-
-def gather_mappings(lang_dir):
-    """ produce {subfile: {(interval): caption}} mappings for a directory
-    """
-    out = {}
-    for subfile in os.listdir(lang_dir):
-        out[subfile] = ts_caption_mapping(os.path.join(lang_dir, subfile))
-    return out
-
+# In[11]:
 
 def align_files(title_dir, ja_sub_mappings, en_sub_mappings):
     """ align two sets of parsed .srt files, and 
@@ -185,9 +223,9 @@ for title, ts_caption_mapping in SUBS.items():
     for ts, caption in ts_caption_mapping.items():
         pass
 #        print caption
-        print caption['ja']
-        print caption['en']
-        print
+#        print caption['ja']
+#        print caption['en']
+#        print
 
 
 # In[ ]:
