@@ -1,26 +1,25 @@
 """                                                                                                                                   
-=== DESCRIPTION                                                                                                                       
-takes a directory of crawled subs and produces aligned phrase pairs                                                                   
-                                                                                                                                      
-=== USAGE                                                                                                                             
-python sub_parser.py [data_loc] [en_out] [ja_out] -t [num_threads (OPTIONAL)]                                                         
-                                                                                                                                      
-=== PRECONDITION                                                                                                                      
-dat_loc is structured as follows:                                                                                                     
-                                                                                                                                      
-root/   (this is your arg)                                                                                                            
-                                                                                                                                      
-    title_i/                                                                                                                          
-       ja/                                                                                                                            
-         .srt files                                                                                                                   
-       en/                                                                                                                            
-         .srt files                                                                                                                   
-                                                                                                                                      
-    ...                                                                                                                               
+=== DESCRIPTION
+ a directory of crawled subs and produces aligned phrase pairs
+
+=== USAGE                                                                                                                            
+python sub_parser.py [data_loc] [en_out] [ja_out] -t [num_threads (OPTIONAL)]                                                        
+                                                                                                                                     
+=== PRECONDITION
+_loc is structured as follows:                                                                                                     
+root/   (this is your arg)                                                                                          
+
+    title_i/                                                                                                                         
+       ja/                                                                                                                           
+         .srt files                                                                                                                  
+       en/                                                                                                                          
+         .srt files                                                                                                                  
+                                                                                                                                     
+    ...                                                                                                                              
 """
 
 
-# coding: utf-8                                                                                                                       
+# coding: utf-8                                                                                                                      
 from joblib import Parallel, delayed
 import pysrt
 import sys
@@ -32,28 +31,28 @@ import collections
 from tqdm import tqdm
 import re
 import string
-import argparse # option parsing                                                                                                      
+import argparse # option parsing                                                                                                     
 
-# TODO - make cla                                                                                                                     
+# TODO - make cla                                                                                                                    
 coverage_threshold = 0.85
 
 
-# global dict so taht all the threads can play with it                                                                                
+# global dict so taht all the threads can play with it                                                                               
 SUBS = {}
 
 
 
 def process_command_line():
-    """ return a tuple of args                                                                                                        
+    """ return a tuple of args                                                                                                       
     """
     parser = argparse.ArgumentParser(description='usage')
 
-    # positional args                                                                                                                 
+    # positional args                                                                                                                
     parser.add_argument('data_loc', metavar='data_loc', type=str, help='crawl output directory')
     parser.add_argument('en_out', metavar='en_out', type=str, help='en output dir')
     parser.add_argument('ja_out', metavar='ja_out', type=str, help='ja output dir')
 
-    # optional args                                                                                                                   
+    # optional args                                                                                                                  
     parser.add_argument('-t', '--threads', dest='num_threads', type=int, default=1, help='num threads to parse with')
 
     args = parser.parse_args()
@@ -63,8 +62,8 @@ def process_command_line():
 
 
 def clean_caption(x):
-    x = x.strip()                            # strip ends                                                                             
-    x = x.lower()                            # lowercase                                                                              
+    x = x.strip()                            # strip ends                                                                            
+    x = x.lower()                            # lowercase                                                                             
 
     brackets       = re.compile('\<.*?\>|{.*?}|\(.*?\)')
     newlines       = re.compile('\\\\n|\n')
@@ -103,7 +102,7 @@ def overlap_size(ival_a, ival_b):
 
 
 def ts_caption_mapping(f):
-    """ produce {(interval): caption} mapping for a file                                                                              
+    """ produce {(interval): caption} mapping for a file                                                                             
     """
     def sub_ival(sub):
         pivot = datetime.date(2017, 01, 01)
@@ -120,7 +119,7 @@ def ts_caption_mapping(f):
 
 
 def gather_mappings(lang_dir):
-    """ produce {subfile: {(interval): caption}} mappings for a directory                                                             
+    """ produce {subfile: {(interval): caption}} mappings for a directory                                                            
     """
     out = {}
     for subfile in os.listdir(lang_dir):
@@ -129,21 +128,21 @@ def gather_mappings(lang_dir):
 
 
 def score_and_match(ja_ts_map, en_ts_map):
-    """ match up two {(ts): caption} mappings and score them                                                                          
-                                                                                                                                      
-        each match is of the form:                                                                                                    
-        {                                                                                                                             
-            ja_ival: {                                                                                                                
-                ja_caption: "...",                                                                                                    
-                en_matches: [                                                                                                         
-                    {                                                                                                                 
-                        ival: en_ival,                                                                                                
-                        caption: "...",                                                                                               
-                        overlap: ...                                                                                                  
-                    }                                                                                                                 
-                ]                                                                                                                     
-            }                                                                                                                         
-        }                                                                                                                             
+    """ match up two {(ts): caption} mappings and score them                                                                         
+                                                                                                                                     
+        each match is of the form:                                                                                                   
+        {                                                                                                                            
+            ja_ival: {                                                                                                               
+                ja_caption: "...",                                                                                                   
+                en_matches: [                                                                                                        
+                    {                                                                                                                
+                        ival: en_ival,                                                                                               
+                        caption: "...",                                                                                              
+                        overlap: ...                                                                                                 
+                    }                                                                                                                
+                ]                                                                                                                    
+            }                                                                                                                        
+        }                                                                                                                            
     """
     ja_matches = 0
     matches = {}
@@ -172,11 +171,11 @@ def score_and_match(ja_ts_map, en_ts_map):
 
 
 def align_files(title_dir, ja_sub_mappings, en_sub_mappings):
-    """ align two sets of parsed .srt files, and                                                                                      
-        return their matched subtitles, sorted by                                                                                     
+    """ align two sets of parsed .srt files, and                                                                                     
+        return their matched subtitles, sorted by                                                                                    
         similarity                               
                                                                                                                                    
-        returns: (score, [matches], ja srt path, en srt path)                                                                         
+        returns: (score, [matches], ja srt path, en srt path)                                                                        
     """
     match_candidates = []
     for (ja_title, ja_subs) in ja_sub_mappings.items():
@@ -193,15 +192,15 @@ def align_files(title_dir, ja_sub_mappings, en_sub_mappings):
 
 
 def extract_matches(match_candidates):
-    """ harvest aligned captions from matched srt files                                                                               
-                                                                                                                                      
-        returns: {                                                                                                                    
-                   timestamp: {                                                                                                       
-                        'ja': ja caption                                                                                              
-                        'en': en caption                                                                                              
-                        'overlap': timedelta                                                                                          
-                     }                                                                                                                
-                  }                                                                                                                   
+    """ harvest aligned captions from matched srt files                                                                              
+                                                                                                                                     
+        returns: {                                                                                                                   
+                   timestamp: {                                                                                                      
+                        'ja': ja caption                                                                                             
+                        'en': en caption                                                                                             
+                        'overlap': timedelta                                                                                         
+                     }                                                                                                               
+                  }                                                                                                                  
     """
     out = {}
     i = 0
@@ -213,7 +212,7 @@ def extract_matches(match_candidates):
             if len(match['en_matches']) == 0: continue
 
             en_captions = sorted(match['en_matches'], key=lambda x: x['overlap'])[::-1]
-            # TODO - take best, not first?                                                                                            
+            # TODO - take best, not first?                                                                                           
             if not ja_ival in out:
                 out[ja_ival] = {
                     'ja': ja_caption,
@@ -226,14 +225,14 @@ def extract_matches(match_candidates):
 
 
 def extract_subs_for_title(title_dir, coverage_threshold):
-    """ parse and align subs for a title                                                                                              
-                                                                                                                                     
-        precondition:                                                                                                                 
-            title_dir/                                                                                                                
-                en/                                                                                                                   
-                    en .srt files                                                                                                     
-                ja/                                                                                                                   
-                    ja .srt files                                                                                                     
+    """ parse and align subs for a title                                                                                             
+                                                                                                                                    
+        precondition:                                                                                                                
+            title_dir/                                                                                                               
+                en/                                                                                                                  
+                    en .srt files                                                                                                    
+                ja/                                                                                                                  
+                    ja .srt files                                                                                                    
     """
     print 'STARTING ', title_dir
 
@@ -245,7 +244,7 @@ def extract_subs_for_title(title_dir, coverage_threshold):
     match_candidates = align_files(title_dir, ja_sub_mappings, en_sub_mappings)
 
     print '\t EXTRACTING BEST MATCHES...'
-#    SUBS[os.path.basename(title_dir)] = extract_matches(match_candidates)                                                            
+#    SUBS[os.path.basename(title_dir)] = extract_matches(match_candidates)                                                           
     matches = extract_matches(match_candidates)
 
 
@@ -274,6 +273,8 @@ def main(data_loc, en_out, ja_out, num_threads):
     Parallel(n_jobs=num_threads)(delayed(extract_subs_for_title)(os.path.join(root, title), coverage_threshold) \
                                      for title in os.listdir(root))
 
+    # Parallel makes its own namespace, so i couldn't modify a shared
+    # dictionary or anything. had to split and join.
     print 'JOINING RESULTS...'
     split_order = []
     for f in os.listdir('.'):
@@ -292,7 +293,7 @@ def main(data_loc, en_out, ja_out, num_threads):
 
     print 'DONE'
 
-                                                                                                                                      
+                                                                                                                                     
 
 
 if __name__ == '__main__':
