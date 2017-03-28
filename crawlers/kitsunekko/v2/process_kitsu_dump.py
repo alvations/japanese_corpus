@@ -49,9 +49,8 @@ def rm_all_spaces(root):
             rename(os.path.join(root, name))
 
         
-
+@timeout(30)
 def convert_all(dir):
-    @timeout(5)
     def to_srt(target, destination):
         try:
             ff = FFmpeg(
@@ -61,7 +60,6 @@ def convert_all(dir):
         except:
             pass
 
-    @timeout(5)
     def to_utf8(target):
         def get_charset():
             print 'WORKING ON', 'chardetect "%s"' % target
@@ -101,6 +99,7 @@ def flatten(dir):
         for name in dirs:
             os.system('rm -r "%s"' % os.path.join(root, name))
       
+@timeout(3)
 def clean_of_nonsubs(dir):
     valid = [
         '.srt',
@@ -121,31 +120,35 @@ def clean_of_nonsubs(dir):
 
 # In[1]:
 
+
 def process_title_dir(dir):
     # decompmress
-    print 'removing spaces...'
-    rm_all_spaces(dir)
-    print 'decompressing...'
-    decompress_all(dir)
-    print 'removing spaces from unpacked dirs/files...'
-    rm_all_spaces(dir)
+    try:
+        print 'removing spaces...'
+        rm_all_spaces(dir)
+        print 'decompressing...'
+        decompress_all(dir)
+        print 'removing spaces from unpacked dirs/files...'
+        rm_all_spaces(dir)
 
-    # flatten
-    print 'flatteining...'
-    flatten(dir)
+        # flatten
+        print 'flatteining...'
+        flatten(dir)
 
-    # set permissions so that you can do stuff
-    os.system('find %s -type f | xargs chmod u+rwx' % dir)
+        # set permissions so that you can do stuff
+        os.system('find %s -type f | xargs chmod u+rwx' % dir)
 
-    print 'cleaning...'
-    clean_of_nonsubs(dir)
+        print 'cleaning...'
+        clean_of_nonsubs(dir)
 
-    # convert all to utf8 srts
-    print 'converting...'
-    convert_all(dir)
-    
-    # clean up
-    rm_non_srt(dir)
+        # convert all to utf8 srts
+        print 'converting...'
+        convert_all(dir)
+    except:
+        'ERROR on ', dir
+    finally:
+        # clean up
+        rm_non_srt(dir)
         
 
 
@@ -157,7 +160,7 @@ def process_dump(root, language='en'):
         and converts result to utf8/srt
     """
     os.system('find %s -type f -name "*.DS_Store" -delete' % root)
-    Parallel(n_jobs=3)(delayed(process_title_dir)(os.path.join(root, title)) for title in tqdm(os.listdir(root)))
+    Parallel(n_jobs=4)(delayed(process_title_dir)(os.path.join(root, title)) for title in tqdm(os.listdir(root)))
 
 #    for title in os.listdir(root):
 #        process_title_dir(os.path.join(root, title))
@@ -223,19 +226,12 @@ def join_dumps(en_dump, ja_dump, out_dump):
         
 
 
-
-
-    
-
-
-
-
 # In[ ]:
 
 #process_dump('test')
 
-join_dumps('/Users/rapigan/Documents/kitsunniko_raw/test_en', 
-           '/Users/rapigan/Documents/kitsunniko_raw/test_ja',
+join_dumps('/Users/rapigan/Documents/kitsunniko_raw/en_dump', 
+           '/Users/rapigan/Documents/kitsunniko_raw/ja_dump',
            '/Users/rapigan/Documents/kitsunniko_raw/test')
 
 # In[ ]:
