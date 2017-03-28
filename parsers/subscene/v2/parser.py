@@ -64,7 +64,9 @@ def process_command_line():
 def clean_caption(x):
     x = x.strip()                            # strip ends                                                                            
     x = x.lower()                            # lowercase                                                                             
-
+    
+    actor          = re.compile('[\w ]+:')
+    unwanted       = re.compile('[*#]')    
     brackets       = re.compile('\<.*?\>|{.*?}|\(.*?\)')
     newlines       = re.compile('\\\\n|\n')
     site_signature = re.compile('.*subtitles.*\n?|.*subs.*\n?', re.IGNORECASE)
@@ -73,6 +75,8 @@ def clean_caption(x):
     encoding_error = re.compile('0000,0000,0000,\w*?')
     multi_space    = re.compile('[ ]+')
 
+    x = actor.sub('', x)
+    x = unwanted.sub('', x)
     x = brackets.sub('', x)
     x = newlines.sub(' ', x)
     x = site_signature.sub('', x)
@@ -80,12 +84,12 @@ def clean_caption(x):
     x = msc.sub('', x)
     x = encoding_error.sub('', x)
     x = multi_space.sub(' ', x)
+    x = x.strip()
     return x
 
 
-def all_english(s):
-    return all([c in string.printable for c in s])
-
+def mostly_english(s):
+    return (sum([1 if c in string.printable else 0 for c in s]) * 1.0 / len(s)) > 0.5
 
 
 def is_overlap(ival_a, ival_b):
@@ -108,13 +112,18 @@ def ts_caption_mapping(f):
         pivot = datetime.date(2017, 01, 01)
         return datetime.datetime.combine(pivot, sub.start.to_time()), \
                datetime.datetime.combine(pivot, sub.end.to_time())
-
-    subs = pysrt.open(f)
+    try:
+        subs = pysrt.open(f)
+    except:
+        return {}
     out = {}
     for sub in subs:
         cleaned_sub = clean_caption(sub.text_without_tags)
         if len(cleaned_sub) > 0:
-            out[sub_ival(sub)] = cleaned_sub
+            try:
+                out[sub_ival(sub)] = cleaned_sub
+            except:
+                pass
     return out
 
 
@@ -126,7 +135,9 @@ def gather_mappings(lang_dir):
     out = {}
     for subfile in os.listdir(lang_dir):
         if not os.path.isdir(os.path.join(lang_dir, subfile)):
-            out[subfile] = ts_caption_mapping(os.path.join(lang_dir, subfile))
+            mapping = ts_caption_mapping(os.path.join(lang_dir, subfile))
+            if len(mapping) > 0:
+                out[subfile] = mapping
     return out
 
 
@@ -150,7 +161,7 @@ def score_and_match(ja_ts_map, en_ts_map):
     ja_matches = 0
     matches = {}
     for ja_ival, ja_caption in ja_ts_map.items():
-        if all_english(ja_caption):
+        if mostly_english(ja_caption):
             continue
 
         matches[ja_ival] = {
@@ -265,7 +276,7 @@ def extract_subs_for_title(title_dir, coverage_threshold):
     en = ''
     ja = ''
     for ts, caption in matches.items():
-        en += 'rejected: ' + str(caption['rejected']) + '\n'
+#        en += 'rejected: ' + str(caption['rejected']) + '\n'
         en += caption['en'] + '\n'
         ja += caption['ja'] + '\n'
     print '\t WRITING RESULTS TO ', title + '_en_subs'
@@ -307,8 +318,6 @@ def main(data_loc, en_out, ja_out, num_threads):
     print 'DONE'
 
                                                                                                                                      
-
-
 if __name__ == '__main__':
     args = process_command_line()
     main(args.data_loc, args.en_out, args.ja_out, args.num_threads)
