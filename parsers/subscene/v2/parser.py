@@ -166,6 +166,8 @@ def score_and_match(ja_ts_map, en_ts_map):
                 caption_match = True
                 ja_matches = ja_matches + (1 if caption_match else 0)
 
+    if len(ja_ts_map) == 0:
+        return 0
     return ja_matches * 1.0 / len(ja_ts_map), matches
 
 
