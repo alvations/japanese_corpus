@@ -121,9 +121,12 @@ def ts_caption_mapping(f):
 def gather_mappings(lang_dir):
     """ produce {subfile: {(interval): caption}} mappings for a directory                                                            
     """
+    if not os.path.exists(lang_dir):
+        return None
     out = {}
     for subfile in os.listdir(lang_dir):
-        out[subfile] = ts_caption_mapping(os.path.join(lang_dir, subfile))
+        if not os.path.isdir(os.path.join(lang_dir, subfile)):
+            out[subfile] = ts_caption_mapping(os.path.join(lang_dir, subfile))
     return out
 
 
@@ -182,6 +185,8 @@ def align_files(title_dir, ja_sub_mappings, en_sub_mappings):
     match_candidates = []
     for (ja_title, ja_subs) in ja_sub_mappings.items():
         for (en_title, en_subs) in en_sub_mappings.items():
+            if ja_subs == {} or en_subs == {}:
+                continue
             coverage, matches = score_and_match(ja_subs, en_subs)
             match_candidates.append( (
                 coverage,
@@ -242,6 +247,10 @@ def extract_subs_for_title(title_dir, coverage_threshold):
     print '\t PARSING .srt FILES...'
     ja_sub_mappings = gather_mappings(os.path.join(title_dir, 'ja'))
     en_sub_mappings = gather_mappings(os.path.join(title_dir, 'en'))
+
+    if ja_sub_mappings == None or en_sub_mappings == None:
+        return
+
 
     print '\t ALIGNING SUBS...'
     match_candidates = align_files(title_dir, ja_sub_mappings, en_sub_mappings)
