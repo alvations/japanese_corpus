@@ -7,7 +7,8 @@ from pyunpack import Archive
 from ffmpy import FFmpeg
 import os
 import time
-
+from tqdm import tqdm
+from difflib import SequenceMatcher
 # In[101]:
 
 
@@ -27,6 +28,7 @@ def rm_all_spaces(root):
     def rename(f, dir=False):
         if f.find(" ") > 0:
             new = f.replace(" ", "-")
+#            os.system('mv "%s" "%s"' % (f, new))
             os.rename(f, new)
             # TODO - refactor
             if dir:
@@ -36,7 +38,10 @@ def rm_all_spaces(root):
 
     for root, dirs, files in os.walk(root):
         for name in dirs:
-            rename(os.path.join(root, name), dir=True)
+            try:
+                rename(os.path.join(root, name), dir=True)
+            except:
+                os.system('rm -r "%s"' % os.path.join(root, name))
 
         for name in files:
             rename(os.path.join(root, name))
@@ -126,11 +131,63 @@ def process_dump(root, language='en'):
         process_title_dir(os.path.join(root, title))
     
 
+def similar(a, b):
+    return SequenceMatcher(None, a, b).ratio()
+
+
+def join_dumps(en_dump, ja_dump, out_dump):
+    os.system('find %s -type f -name "*.DS_Store" -delete' % en_dump)    
+    os.system('find %s -type f -name "*.DS_Store" -delete' % ja_dump)    
+
+#    rm_all_spaces(en_dump)
+#    rm_all_spaces(ja_dump)
+#    process_dump(en_dump)
+#    process_dump(ja_dump)
+
+    # TODO - process all the titles, better matching, REFACTOR
+
+    en_titles = [x.lower() for x in os.listdir(en_dump)]
+    ja_titles = [x.lower() for x  in os.listdir(ja_dump)]
+
+    joined_titles = []
+    for ja_title in tqdm(ja_titles):
+        score, en_title = max( (similar(ja_title, en_title), en_title) for en_title in en_titles)
+        if score > 0.81:
+            
+            joined_titles.append( (ja_title, en_title) )
+
+
+
+
+    for ja, en in joined_titles:
+        new_path = os.path.join(out_dump, en).replace(' ', '-')
+        en_new = os.path.join(new_path, 'en')
+        if not os.path.exists(en_new):
+            os.makedirs(os.path.join(new_path, 'en'))
+        ja_new = os.path.join(new_path, 'ja')
+        if not os.path.exists(ja_new):
+            os.makedirs(os.path.join(new_path, 'ja'))
+
+        for f in os.listdir(os.path.join(en_dump, en)):
+            os.system('mv "%s" "%s"' % (os.path.join(en_dump, en, f), os.path.join(new_path, 'en')))
+        for f in os.listdir(os.path.join(ja_dump, ja)):
+            os.system('mv "%s" "%s"' % (os.path.join(ja_dump, ja, f), os.path.join(new_path, 'ja')))
+        
+
+
+
+
+    
+
+
+
 
 # In[ ]:
 
-process_dump('test')
+#process_dump('test')
 
+join_dumps('/Users/rapigan/Documents/kitsunniko_raw/en_dump', '/Users/rapigan/Documents/kitsunniko_raw/ja_dump',
+           '/Users/rapigan/Documents/kitsunniko_raw/test')
 
 # In[ ]:
 
