@@ -3,7 +3,7 @@
  a directory of crawled subs and produces aligned phrase pairs
 
 === USAGE                                                                                                                            
-python sub_parser.py [data_loc] [en_out] [ja_out] -t [num_threads (OPTIONAL)]                                                        
+python parser.py [data_loc] [en_out] [ja_out] -t [num_threads (OPTIONAL)]                                                        
                                                                                                                                      
 === PRECONDITION
 _loc is structured as follows:                                                                                                     
@@ -112,10 +112,10 @@ def ts_caption_mapping(f):
     subs = pysrt.open(f)
     out = {}
     for sub in subs:
-        if len(sub.text_without_tags) > 0:
-            out[sub_ival(sub)] = clean_caption(sub.text_without_tags)
+        cleaned_sub = clean_caption(sub.text_without_tags)
+        if len(cleaned_sub) > 0:
+            out[sub_ival(sub)] = cleaned_sub
     return out
-
 
 
 def gather_mappings(lang_dir):
@@ -216,8 +216,9 @@ def extract_matches(match_candidates):
             if not ja_ival in out:
                 out[ja_ival] = {
                     'ja': ja_caption,
-                        'en': en_captions[0]['caption'],
-                    'overlap': en_captions[0]['overlap']
+                    'en': en_captions[0]['caption'],
+                    'overlap': en_captions[0]['overlap'],
+                    'rejected': [candidate['caption'] for candidate in en_captions]
                  }
         i += 1
     return out
@@ -253,6 +254,7 @@ def extract_subs_for_title(title_dir, coverage_threshold):
     en = ''
     ja = ''
     for ts, caption in matches.items():
+        en += 'rejected: ' + str(caption['rejected']) + '\n'
         en += caption['en'] + '\n'
         ja += caption['ja'] + '\n'
     print '\t WRITING RESULTS TO ', title + '_en_subs'
