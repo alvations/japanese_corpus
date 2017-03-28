@@ -2,13 +2,15 @@
 # coding: utf-8
 
 # In[84]:
-
+from timeout import timeout
 from pyunpack import Archive
 from ffmpy import FFmpeg
 import os
 import time
 from tqdm import tqdm
 from difflib import SequenceMatcher
+from joblib import Parallel, delayed
+
 # In[101]:
 
 
@@ -49,14 +51,20 @@ def rm_all_spaces(root):
         
 
 def convert_all(dir):
+    @timeout(5)
     def to_srt(target, destination):
-        ff = FFmpeg(
-            inputs={target: None},
-            outputs={destination: None})
-        ff.run()
-  
+        try:
+            ff = FFmpeg(
+                inputs={target: None},
+                outputs={destination: None})
+            ff.run()
+        except:
+            pass
+
+    @timeout(5)
     def to_utf8(target):
         def get_charset():
+            print 'WORKING ON', 'chardetect "%s"' % target
             output = os.popen('chardetect "%s"' % target).read()
             charset = output.split(':')[1].strip().split(' ')[0]
             return charset.upper()
@@ -69,7 +77,7 @@ def convert_all(dir):
                     os.system("rm '%s'" % target)
         except:
             pass
-       
+
     for file in os.listdir(dir):
         to_utf8(os.path.join(dir, file))
     for file in os.listdir(dir):
@@ -93,7 +101,23 @@ def flatten(dir):
         for name in dirs:
             os.system('rm -r "%s"' % os.path.join(root, name))
       
+def clean_of_nonsubs(dir):
+    valid = [
+        '.srt',
+        '.ass',
+        '.sub',
+        '.lrc',
+        '.sbv',
+        '.cap',
+        '.txt',
+        '.idx',
+        '.usf',
+        '.jss',
+        ]
 
+    for file in os.listdir(dir):
+        if os.path.splitext(file.lower())[1] not in valid:
+            os.system('rm "%s"' % os.path.join(dir, file))
 
 # In[1]:
 
@@ -109,6 +133,12 @@ def process_title_dir(dir):
     # flatten
     print 'flatteining...'
     flatten(dir)
+
+    # set permissions so that you can do stuff
+    os.system('find %s -type f | xargs chmod u+rwx' % dir)
+
+    print 'cleaning...'
+    clean_of_nonsubs(dir)
 
     # convert all to utf8 srts
     print 'converting...'
@@ -127,39 +157,57 @@ def process_dump(root, language='en'):
         and converts result to utf8/srt
     """
     os.system('find %s -type f -name "*.DS_Store" -delete' % root)
-    for title in os.listdir(root):
-        process_title_dir(os.path.join(root, title))
+    Parallel(n_jobs=3)(delayed(process_title_dir)(os.path.join(root, title)) for title in tqdm(os.listdir(root)))
+
+#    for title in os.listdir(root):
+#        process_title_dir(os.path.join(root, title))
     
 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
 
-def join_dumps(en_dump, ja_dump, out_dump):
-    os.system('find %s -type f -name "*.DS_Store" -delete' % en_dump)    
-    os.system('find %s -type f -name "*.DS_Store" -delete' % ja_dump)    
-
-#    rm_all_spaces(en_dump)
-#    rm_all_spaces(ja_dump)
-#    process_dump(en_dump)
-#    process_dump(ja_dump)
-
-    # TODO - process all the titles, better matching, REFACTOR
-
+def get_joinable_titles(en_dump, ja_dump):
     en_titles = [x.lower() for x in os.listdir(en_dump)]
     ja_titles = [x.lower() for x  in os.listdir(ja_dump)]
 
-    joined_titles = []
+    joined = []
+    ja = []
+    en = []
     for ja_title in tqdm(ja_titles):
         score, en_title = max( (similar(ja_title, en_title), en_title) for en_title in en_titles)
         if score > 0.81:
-            
-            joined_titles.append( (ja_title, en_title) )
+            en.append(en_title)
+            ja.append(ja_title)
+            joined.append( (ja_title, en_title) )
+    return joined, en, ja
 
 
+def rm_invalid(dump, valid):
+    for dir in os.listdir(dump):
+        if not dir.lower() in valid:
+            os.system('rm -r "%s"' % os.path.join(dump, dir))
 
 
-    for ja, en in joined_titles:
+def join_dumps(en_dump, ja_dump, out_dump):
+    os.system('find %s -type f | xargs chmod u+rwx' % en_dump)
+    os.system('find %s -type f | xargs chmod u+rwx' % ja_dump)
+
+    os.system('find %s -type f -name "*.DS_Store" -delete' % en_dump)    
+    os.system('find %s -type f -name "*.DS_Store" -delete' % ja_dump)    
+
+    rm_all_spaces(en_dump)
+    rm_all_spaces(ja_dump)
+
+    joined, valid_en, valid_ja = get_joinable_titles(en_dump, ja_dump)
+
+    rm_invalid(en_dump, valid_en)
+    rm_invalid(ja_dump, valid_ja)
+
+    process_dump(en_dump)
+    process_dump(ja_dump)
+
+    for ja, en in joined:
         new_path = os.path.join(out_dump, en).replace(' ', '-')
         en_new = os.path.join(new_path, 'en')
         if not os.path.exists(en_new):
@@ -186,7 +234,8 @@ def join_dumps(en_dump, ja_dump, out_dump):
 
 #process_dump('test')
 
-join_dumps('/Users/rapigan/Documents/kitsunniko_raw/en_dump', '/Users/rapigan/Documents/kitsunniko_raw/ja_dump',
+join_dumps('/Users/rapigan/Documents/kitsunniko_raw/test_en', 
+           '/Users/rapigan/Documents/kitsunniko_raw/test_ja',
            '/Users/rapigan/Documents/kitsunniko_raw/test')
 
 # In[ ]:
