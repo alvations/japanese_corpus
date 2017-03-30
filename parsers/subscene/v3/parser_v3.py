@@ -260,7 +260,7 @@ def extract_subs(ja, ens, title, coverage_threshold):
     
     en = ''
     ja = ''
-    for en_s, ja_s in aligned_captions:
+    for en_s, ja_s in alignments:
         en += en_s + '\n'
         ja += ja_s + '\n'
     print '\t WRITING RESULTS TO ', title + '_en_subs'
