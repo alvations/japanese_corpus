@@ -117,22 +117,30 @@ def extract_subs(ja_srt, title_root):
     print '\t SUBTITLE ALIGNER BUILT...', ja_srt
 
     print '\t HARVESTING SUBS FROM', ja_srt
+    alignments = []
     for en_subfile in en_srts:
         print '\t\t MATCHING WITH ', en_subfile
         a.load(en_subfile)
-        alignments = []
         for pair in a.solve_v3():
             alignments.append(pair)
     
+    if len(alignments) == 0:
+        print 'NO ALIGNMENTS FOR ', ja_srt, en_srts
+        return
     en = ''
     ja = ''
+    t = ''
     for en_s, ja_s, sim, trans in alignments:
-        en += en_s + ' ' + str(sim) + ' ' + trans +  '\n'
+        t += trans + '\n' 
+        en += en_s + '\n'
         ja += ja_s + '\n'
     title = title_root.split('/')[1]
     print '\t WRITING RESULTS TO ', title + '_en_subs'
     with open(title + '_en_subs', 'a') as f:
         f.write(en.encode('utf8'))
+    print '\t WRITING RESULTS TO ', title + '_trans_subs'
+    with open(title + '_trans_subs', 'a') as f:
+        f.write(t.encode('utf8'))
     print '\t WRITING RESULTS TO ', title + '_ja_subs'
     with open(title + '_ja_subs', 'a') as f:
         f.write(ja.encode('utf8'))

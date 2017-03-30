@@ -117,7 +117,7 @@ class Aligner():
             sims = [m[0] for m in matches]
             sim_mean = np.mean(sims)
             sim_std = np.std(sims)
-            return sim_mean + (0.3 * sim_std)
+            return sim_mean + (0.25 * sim_std)
 
         matches = self.get_caption_matches()
 
