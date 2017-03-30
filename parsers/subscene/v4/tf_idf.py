@@ -49,15 +49,15 @@ class TF_IDF():
         if type(s) is not type(u''):
             s = unicode(s, 'utf8')
         s_new = ''.join(ch for ch in s if category(ch)[0] != 'P')
-        try:
-            if category(s[-1])[0] == 'P':
-                s_new = s_new + s[-1]
-        except:
-            pass
+#        try:
+#            if category(s[-1])[0] == 'P':
+#                s_new = s_new + s[-1]
+#        except:
+#            pass
 
         # stem words
         s_new = [self.stemmer.stemWord(w) for w in word_tokenize(s_new)]
-        return s
+        return s_new
 
 
     def cosine_similarity(self, v1, v2):
@@ -101,10 +101,11 @@ class TF_IDF():
 
             ref_tfidf = self.tfidf_vecs[''.join(w for w in ref)]
             trans_tfidf = self.build_tfidf_vec(trans)
-            return self.cosine_similarity(ref_tfidf, trans_tfidf)
+
+            return self.cosine_similarity(ref_tfidf, trans_tfidf), ref_tfidf, trans_tfidf
 
         except:
-            return 0
+            return 0, None, None
 
 
     def inverse_document_frequency(self, corpus):

@@ -126,14 +126,15 @@ def extract_subs(ja_srt, title_root):
     
     en = ''
     ja = ''
-    for en_s, ja_s in alignments:
-        en += en_s + '\n'
+    for en_s, ja_s, sim, trans in alignments:
+        en += en_s + ' ' + str(sim) + ' ' + trans +  '\n'
         ja += ja_s + '\n'
-    print '\t WRITING RESULTS TO ', title_root + '_en_subs'
-    with open(title_root + '_en_subs', 'a') as f:
+    title = title_root.split('/')[1]
+    print '\t WRITING RESULTS TO ', title + '_en_subs'
+    with open(title + '_en_subs', 'a') as f:
         f.write(en.encode('utf8'))
-    print '\t WRITING RESULTS TO ', title_root + '_ja_subs'
-    with open(title_root + '_ja_subs', 'a') as f:
+    print '\t WRITING RESULTS TO ', title + '_ja_subs'
+    with open(title + '_ja_subs', 'a') as f:
         f.write(ja.encode('utf8'))
 
 
@@ -150,12 +151,12 @@ def main(data_loc, en_out, ja_out, num_threads):
     root = data_loc
     os.system("find %s -type f -name '*.DS_Store' -delete" % root)
 
-#    Parallel(n_jobs=num_threads)(delayed(extract_subs)(ja, title) \
-#                                     for (ja, title) in generate_subfiles(data_loc))
+    Parallel(n_jobs=num_threads)(delayed(extract_subs)(ja, title) \
+                                     for (ja, title) in generate_subfiles(data_loc))
 
-    for ja_srt, title_root in generate_subfiles(data_loc):
-        extract_subs(ja_srt, title_root)
-        quit()
+#    for ja_srt, title_root in generate_subfiles(data_loc):
+#        extract_subs(ja_srt, title_root)
+#        quit()
 
     # Parallel makes its own namespace, so i couldn't modify a shared
     # dictionary or anything. had to split and join.
@@ -172,7 +173,7 @@ def main(data_loc, en_out, ja_out, num_threads):
 
     os.system(en_cat)
 
-#    print 'CLEANING UP...'
+    print 'NOT CLEANING UP...'
 #    os.system('rm *_subs')
 
     print 'DONE'

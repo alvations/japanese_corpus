@@ -17,14 +17,14 @@ class Aligner():
         self.ja_translations = self.build_ja_translations()
 
 
-    def build_ja_translations(self):
+    def build_ja_translations(self, min_trans=500):
         """ builds approximate translations for each caption
             in self.ja_file
 
             returns: [ (translation, caption) ]
         """
         out = []
-        for x in range(self.ja_start, min(500, len(self.ja))):
+        for x in range(self.ja_start, min(min_trans, len(self.ja))):
             caption = clean_caption(self.ja[x].text)
             if len(caption) > 0:
                 out.append(( self.translate(caption), caption) )
@@ -54,7 +54,7 @@ class Aligner():
          
             returns: translation (str)
         """
-        return 'its a mighty fine day isnt it i just love this shit woohooo'
+#        return 'its a mighty fine day isnt it i just love this shit woohooo'
         
         try:
             # delete whitespace from ja
@@ -85,16 +85,16 @@ class Aligner():
         delta = (abs((len(self.ja) - j) - (len(self.en) - e)))
         matches = []
         for i, (trans, ja_sub) in enumerate(self.ja_translations):
-            print '\t\t\t i ', i, len(self.ja_translations)
+#            print '\t\t\t i ', i, len(self.ja_translations)
 
             if e+i > len(self.en):
                 break
             candidates = []
-            for j in range(e+i, min(len(self.en), e+i+delta)):
+            for j in range(max(0, e+i-10), min(len(self.en), e+i+delta)):
                 en_sub = clean_caption(self.en[j].text)
-                sim =  self.tf_idf.similarity(en_sub, trans)
+                sim, en_vec, trans_vec =  self.tf_idf.similarity(en_sub, trans)
                 subs = (en_sub, ja_sub)
-                candidates.append( (sim, j, subs, trans) )
+                candidates.append( (sim, j, subs, trans, en_vec, trans_vec) )
             candidates = sorted(candidates)[::-1]
             if len(candidates) > 0:
                 matches.append(candidates[0])
@@ -113,25 +113,32 @@ class Aligner():
             ratio_std = np.std(len_ratios)
             return ratio_mean + ratio_std
 
-        def get_threshold_cutoff(matches):
+        def get_sim_cutoff(matches):
             sims = [m[0] for m in matches]
             sim_mean = np.mean(sims)
             sim_std = np.std(sims)
-            return sim_mean + (0.25 * sim_std)
+            return sim_mean + (0.3 * sim_std)
 
         matches = self.get_caption_matches()
 
         ratio_cutoff = get_ratio_cutoff(matches)
-        threshold_cutoff = get_threshold_cutoff(matches)
+        sim_cutoff = get_sim_cutoff(matches)
 
         print '\t\t SPEWING MATCHES FOR', self.ja_file, self.en_file
         for match in matches:
 #            print 'match ', match
-            sim, e, (en, ja), trans = match
+            sim, e, (en, ja), trans, en_vec, trans_vec = match
 
             len_ratio = len(en) * 1.0 / len(ja)
 
-            if sim > sim_cutoff and len_ratio < ratio_cuttoff:
-                yield en, ja
+            if sim > sim_cutoff and len_ratio < ratio_cutoff:
+#                print en
+#                print ja
+#                print sim
+#                print trans
+#                print en_vec
+#                print trans_vec
+#                print
+                yield en, ja, sim, trans
 
 
