@@ -36,13 +36,6 @@ from guessit import guessit
 from difflib import SequenceMatcher
 from subfile_aligner import Aligner
 
-# TODO - make cla                                                                                                                    
-coverage_threshold = 0.85
-
-
-# global dict so taht all the threads can play with it                                                                               
-SUBS = {}
-
 
 
 def process_command_line():
@@ -63,72 +56,72 @@ def process_command_line():
 
 
 
-
 def should_align(ja_f, en_f):
-    """ some title-based heuristics on whether a title should match
-        TODO - REFACTOR
-
+    """ some title-based heuristics on whether two filepaths are a match
     """
     def similarity(a, b):
         if not a or not b or len(a) == 0 or len(b) == 0:
             return 0
         return SequenceMatcher(None, a, b).ratio()
 
+    # for testing
     def report(b):
         print b
         print ja_f
         print en_f
 
-
     ja = guessit(ja_f)
     en = guessit(en_f)
 
-    if ja.get('title') and en.get('title') and \
-            similarity(ja.get('title'), en.get('title')) < 0.5:
-#        report(False)
+
+    if similarity(ja.get('title'), en.get('title')) < 0.5:
         return False
 
     if ja.get('type') == 'movie' and en.get('type') == 'movie':
         if similarity(ja.get('title'), en.get('title')) > 0.8 and \
            similarity(ja.get('alternative_title'), en.get('alternative_title')) > 0.9:
-#            report(True)
             return True
 
     if ja.get('type') == 'episode' and en.get('type') == 'episode':
         if ja.get('episode') == en.get('episode') or \
                 similarity(ja.get('episode_title'), en.get('episode_title')) > 0.9:
-#            report(True)
             return True
 
     return False
         
 
 
-def get_file_alignments(ja_title_root, en_title_root):
-    alignments = collections.defaultdict(list)
-    for ja_subfile in os.listdir(ja_title_root):
-        for en_subfile in os.listdir(en_title_root):
-            if should_align(ja_subfile, en_subfile):
-                alignments[os.path.join(ja_title_root, ja_subfile)].append(
-                    os.path.join(en_title_root, en_subfile))
+def get_file_alignments(ja_subfile, en_title_root):
+    """ get all the en srts that are a match for a ja srt
+    
+        returns: [en matches]
+    """
+    alignments = []
+    for en_subfile in os.listdir(en_title_root):
+        if should_align(ja_subfile, en_subfile):
+            alignments.append(os.path.join(en_title_root, en_subfile))
     return alignments
 
 
-
-def extract_subs(ja, ens, title, coverage_threshold):
-    """ parse and align subs for a pair of srt files
+def extract_subs(ja_srt, title_root):
+    """ parse and align, and write subs for a pair of srt files
     """
+    print '\t GETTING FILE ALIGNMENTS FOR ', ja_srt
+    en_srts = get_file_alignments(ja_srt, os.path.join(title_root, 'en'))
+    print '\t ALIGNED EN FILES FOR ', ja_srt
+    for en_srt in en_srts:
+        print '\t\t ', en_srt
 
-    print '\t BUILDING ALIGNER FOR...', ja
-    a = Aligner(ja)
-    print '\t ALIGNER BUILT...', ja
+    print '\t BUILDING SUBTITLE ALIGNER FOR...', ja_srt
+    a = Aligner(ja_srt)
+    print '\t SUBTITLE ALIGNER BUILT...', ja_srt
 
-    print '\t JA PIVOT ', ja
-    for en_subfile in ens:
-        print '\t MATCHING WITH ', en_subfile
+    print '\t HARVESTING SUBS FROM', ja_srt
+    for en_subfile in en_srts:
+        print '\t\t MATCHING WITH ', en_subfile
         a.load(en_subfile)
         alignments = []
-        for pair in tqdm(a.solve_v3()):
+        for pair in a.solve_v3():
             alignments.append(pair)
     
     en = ''
@@ -136,11 +129,11 @@ def extract_subs(ja, ens, title, coverage_threshold):
     for en_s, ja_s in alignments:
         en += en_s + '\n'
         ja += ja_s + '\n'
-    print '\t WRITING RESULTS TO ', title + '_en_subs'
-    with open(title + '_en_subs', 'a') as f:
+    print '\t WRITING RESULTS TO ', title_root + '_en_subs'
+    with open(title_root + '_en_subs', 'a') as f:
         f.write(en.encode('utf8'))
-    print '\t WRITING RESULTS TO ', title + '_ja_subs'
-    with open(title + '_ja_subs', 'a') as f:
+    print '\t WRITING RESULTS TO ', title_root + '_ja_subs'
+    with open(title_root + '_ja_subs', 'a') as f:
         f.write(ja.encode('utf8'))
 
 
@@ -148,20 +141,21 @@ def generate_subfiles(root_dir):
     """ spits out ja files and aligned en files
     """
     for title_dir in os.listdir(root_dir):
-        print 'ALIGNING ', title_dir
-        file_alignments = get_file_alignments(os.path.join(root_dir, title_dir, 'ja'),
-                                              os.path.join(root_dir, title_dir, 'en'))
-        print 'ALIGNMENT DONE ', title_dir
-        for ja_filename, en_filenames in file_alignments.items():
-            yield ja_filename, en_filenames, title_dir
+        for ja_subfile in os.listdir(os.path.join(root_dir, title_dir, 'ja')):
+            yield os.path.join(root_dir, title_dir, 'ja', ja_subfile), \
+                  os.path.join(root_dir, title_dir)
 
 
 def main(data_loc, en_out, ja_out, num_threads):
     root = data_loc
     os.system("find %s -type f -name '*.DS_Store' -delete" % root)
 
-    Parallel(n_jobs=num_threads)(delayed(extract_subs)(ja, ens, title, coverage_threshold) \
-                                     for (ja, ens, title) in generate_subfiles(data_loc))
+#    Parallel(n_jobs=num_threads)(delayed(extract_subs)(ja, title) \
+#                                     for (ja, title) in generate_subfiles(data_loc))
+
+    for ja_srt, title_root in generate_subfiles(data_loc):
+        extract_subs(ja_srt, title_root)
+        quit()
 
     # Parallel makes its own namespace, so i couldn't modify a shared
     # dictionary or anything. had to split and join.
@@ -174,12 +168,9 @@ def main(data_loc, en_out, ja_out, num_threads):
     en_cat = 'cat ' + ' '.join('%s_en_subs' % title for title in split_order) + ' > %s' % en_out
     ja_cat = 'cat ' + ' '.join('%s_ja_subs' % title for title in split_order) + ' > %s' % ja_out
 
-    print ja_cat
     os.system(ja_cat)
 
-    print en_cat
     os.system(en_cat)
-
 
 #    print 'CLEANING UP...'
 #    os.system('rm *_subs')
@@ -190,3 +181,4 @@ def main(data_loc, en_out, ja_out, num_threads):
 if __name__ == '__main__':
     args = process_command_line()
     main(args.data_loc, args.en_out, args.ja_out, args.num_threads)
+

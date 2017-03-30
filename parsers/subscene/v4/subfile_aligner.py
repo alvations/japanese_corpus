@@ -10,65 +10,82 @@ import numpy as np
 from utils import clean_caption
 
 class Aligner():
-
-    def __init__(self, ja_file, pair_scorer=None):
-        self.ps = pair_scorer
+    def __init__(self, ja_file):
         self.ja_file = ja_file
         self.ja = pysrt.open(ja_file)
         self.ja_start = self.first_content_caption(self.ja)
-        # TODO - CLEAN UP!!
-        self.ja_translations = [(self.translate(self.ja[x].text), clean_caption(self.ja[x].text)) \
-                                    for x in tqdm(range(self.ja_start, min(500, len(self.ja)))) \
-                                    if len(clean_caption(self.ja[x].text)) > 0 ]
+        self.ja_translations = self.build_ja_translations()
 
+
+    def build_ja_translations(self):
+        """ builds approximate translations for each caption
+            in self.ja_file
+
+            returns: [ (translation, caption) ]
+        """
+        out = []
+        for x in range(self.ja_start, min(500, len(self.ja))):
+            caption = clean_caption(self.ja[x].text)
+            if len(caption) > 0:
+                out.append(( self.translate(caption), caption) )
+        return out
 
     def load(self, en_file):
+        """ load an en subfile (.srt) into the aligner
+        """
         self.en_file = en_file
         self.en = pysrt.open(en_file)
         self.en_start = self.first_content_caption(self.en)
+        # build tf-idf vectors for each caption
         self.tf_idf = TF_IDF(en_file)        
 
 
     def first_content_caption(self, subfile):
+        """ finds the first caption with a real caption.
+            this is typically the first caption at a "real" time (i.e. not at 2:00)
+        """
         for i, sub in enumerate(subfile):
             if sub.start.milliseconds != 0:
                 return i
 
 
-    def translate(self, text):
-        """ TODO - REFACTOR """
-        # delete whitespace
+    def translate(self, caption):
+        """ produces an approximate translation of a cleaned ja caption
+         
+            returns: translation (str)
+        """
+        return 'its a mighty fine day isnt it i just love this shit woohooo'
+        
         try:
-            ja = clean_caption(text).replace(' ', '').encode('utf8')
+            # delete whitespace from ja
+            ja = caption.replace(' ', '').encode('utf8')
             ja = ja.replace('\xe3\x80\x80', '')
             ja = ja.strip()
             if len(ja) == 0:
                 return None
             # get trans
             cmd = "./trans ja: " + ja
-    #        print cmd
             result = os.popen(cmd).read().split('\n')[-2].split(',')[0]
 
             # parse trans
-    #        result = result.encode('ascii')
             result = ''.join([char for char in result if char in string.printable])
             result = result[7:-4].lower()
+            return result
+
         except: 
-            result = ''
-        return result
+            return ''
 
 
-    def solve_v3(self): 
-        """ tf-idf translation matching """
+    def get_caption_matches(self):
+        """ match up en and ja srt files
+            returns: a list of (en caption, ja caption) tuples
+        """
         j = self.ja_start
         e = self.en_start
-
         delta = (abs((len(self.ja) - j) - (len(self.en) - e)))
-
-
         matches = []
         for i, (trans, ja_sub) in enumerate(self.ja_translations):
-            print '\t\t i ', i, len(self.ja_translations)
+            print '\t\t\t i ', i, len(self.ja_translations)
 
             if e+i > len(self.en):
                 break
@@ -81,20 +98,33 @@ class Aligner():
             candidates = sorted(candidates)[::-1]
             if len(candidates) > 0:
                 matches.append(candidates[0])
+        return matches
 
-#        print 'matches len ', len(matches)
-#        print 'm0 ', matches[0]
-        len_ratios = [len(m[2][0]) * 1.0 / len(m[2][1]) for m in matches]
-        ratio_mean = np.mean(len_ratios)
-        ratio_std = np.std(len_ratios)
-        ratio_cuttoff = ratio_mean + ratio_std
 
-        sims = [m[0] for m in matches]
-        sim_mean = np.mean(sims)
-        sim_std = np.std(sims)
-        sim_cutoff = sim_mean + (0.25 * sim_std)
+    def solve_v3(self):
+        """ main alignment logic. for each ja caption, take its approximate translation
+            and look around for nearby en captions with high tf-idf similarity
+            
+            yields: (en, ja) caption pairs
+        """
+        def get_ratio_cutoff(matches):
+            len_ratios = [len(m[2][0]) * 1.0 / len(m[2][1]) for m in matches]
+            ratio_mean = np.mean(len_ratios)
+            ratio_std = np.std(len_ratios)
+            return ratio_mean + ratio_std
 
-        print 'SPEWING MATCHES FOR', self.ja_file, self.en_file
+        def get_threshold_cutoff(matches):
+            sims = [m[0] for m in matches]
+            sim_mean = np.mean(sims)
+            sim_std = np.std(sims)
+            return sim_mean + (0.25 * sim_std)
+
+        matches = self.get_caption_matches()
+
+        ratio_cutoff = get_ratio_cutoff(matches)
+        threshold_cutoff = get_threshold_cutoff(matches)
+
+        print '\t\t SPEWING MATCHES FOR', self.ja_file, self.en_file
         for match in matches:
 #            print 'match ', match
             sim, e, (en, ja), trans = match
@@ -103,20 +133,5 @@ class Aligner():
 
             if sim > sim_cutoff and len_ratio < ratio_cuttoff:
                 yield en, ja
-#                print en
-#                print ja
-#                print trans
-#                print sim
-#                print
-
-            
-#            sim, (e_new, j_new), (ja_s, en_s) = candidates[-1]
-
-#            print sim
-#            print e_new, j_new
-#            print ja_s
-#            print en_s
-#            print
-               
 
 
