@@ -12,11 +12,14 @@
 ### Steps:
 
 ```
+# crawl ja an en subs
 python crawler.py urls/ja.txt > JA_LOG
-# wait 3 hours...
 python crawler.py urls/en.txt > EN_LOG
-# wait ~24 hours...
-# now all the matched subs will be in out/
+
+# convert to utf8
+find out/ -type f | python all_to_utf8.py
+
+
 ```
 
 ### Results/files:

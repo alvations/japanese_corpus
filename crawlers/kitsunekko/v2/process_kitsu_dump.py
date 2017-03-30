@@ -57,7 +57,7 @@ def convert_all(dir):
                 inputs={target: None},
                 outputs={destination: None})
             ff.run()
-        except:
+v        except:
             pass
 
     def to_utf8(target):
@@ -160,7 +160,7 @@ def process_dump(root, language='en'):
         and converts result to utf8/srt
     """
     os.system('find %s -type f -name "*.DS_Store" -delete' % root)
-    Parallel(n_jobs=4)(delayed(process_title_dir)(os.path.join(root, title)) for title in tqdm(os.listdir(root)))
+    Parallel(n_jobs=8)(delayed(process_title_dir)(os.path.join(root, title)) for title in tqdm(os.listdir(root)))
 
 #    for title in os.listdir(root):
 #        process_title_dir(os.path.join(root, title))
@@ -224,6 +224,7 @@ def join_dumps(en_dump, ja_dump, out_dump):
         for f in os.listdir(os.path.join(ja_dump, ja)):
             os.system('mv "%s" "%s"' % (os.path.join(ja_dump, ja, f), os.path.join(new_path, 'ja')))
         
+
 
 
 # In[ ]:

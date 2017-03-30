@@ -32,6 +32,8 @@ from tqdm import tqdm
 import re
 import string
 import argparse # option parsing                                                                                                     
+from guessit import guessit
+from difflib import SequenceMatcher
 
 # TODO - make cla                                                                                                                    
 coverage_threshold = 0.85
@@ -185,6 +187,31 @@ def score_and_match(ja_ts_map, en_ts_map):
     return ja_matches * 1.0 / len(ja_ts_map), matches
 
 
+def should_align(ja, en):
+    """ some title-based heuristics on whether a title should match
+    """
+    def similarity(a, b):
+        if not a or not b or len(a) == 0 or len(b) == 0:
+            return 0
+        return SequenceMatcher(None, a, b).ratio()
+
+    ja = guessit(ja)
+    en = guessit(en)
+    
+    if ja.get('type') == 'movie' and en.get('type') == 'movie':
+        if similarity(ja.get('title'), en.get('title')) > 0.8 and \
+           similarity(ja.get('alternative_title'), en.get('alternative_title')) > 0.8:
+            return True
+
+    if ja.get('type') == 'episode' and en.get('type') == 'episode':
+        if ja.get('episode') == en.get('episode') or \
+                similarity(ja.get('episode_title'), en.get('episode_title')) > 0.8:
+            return True
+
+    return False
+        
+
+
 
 def align_files(title_dir, ja_sub_mappings, en_sub_mappings):
     """ align two sets of parsed .srt files, and                                                                                     
@@ -198,13 +225,15 @@ def align_files(title_dir, ja_sub_mappings, en_sub_mappings):
         for (en_title, en_subs) in en_sub_mappings.items():
             if ja_subs == {} or en_subs == {}:
                 continue
-            coverage, matches = score_and_match(ja_subs, en_subs)
-            match_candidates.append( (
-                coverage,
-                matches,
-                os.path.join(title_dir, 'ja', ja_title),
-                os.path.join(title_dir, 'en', en_title),
-            ) )
+
+            if should_align(ja_title, en_title):
+                coverage, matches = score_and_match(ja_subs, en_subs)
+                match_candidates.append( (
+                    coverage,
+                    matches,
+                    os.path.join(title_dir, 'ja', ja_title),
+                    os.path.join(title_dir, 'en', en_title),
+                ) )
     match_candidates = sorted(match_candidates)[::-1]
     return match_candidates
 
@@ -276,7 +305,7 @@ def extract_subs_for_title(title_dir, coverage_threshold):
     en = ''
     ja = ''
     for ts, caption in matches.items():
-#        en += 'rejected: ' + str(caption['rejected']) + '\n'
+        en += 'rejected: ' + str(caption['rejected']) + '\n'
         en += caption['en'] + '\n'
         ja += caption['ja'] + '\n'
     print '\t WRITING RESULTS TO ', title + '_en_subs'
@@ -302,13 +331,16 @@ def main(data_loc, en_out, ja_out, num_threads):
     print 'JOINING RESULTS...'
     split_order = []
     for f in os.listdir('.'):
-        if '_subs' in f:
+        if '_en_subs' in f:
             split_order.append(f.split('_')[0])   # TODO - BETER SPLITTER
 
     en_cat = 'cat ' + ' '.join('%s_en_subs' % title for title in split_order) + ' > %s' % en_out
     ja_cat = 'cat ' + ' '.join('%s_ja_subs' % title for title in split_order) + ' > %s' % ja_out
 
+    print ja_cat
     os.system(ja_cat)
+
+    print en_cat
     os.system(en_cat)
 
 
