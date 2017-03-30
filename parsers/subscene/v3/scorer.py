@@ -27,6 +27,7 @@ import nltk
 from collections import defaultdict
 from jpn.deinflect import guess_stem
 from tqdm import tqdm
+import math
 
 
 # FROM https://github.com/rakuten-nlp/rakutenma
@@ -204,17 +205,18 @@ class PairScorer():
         s = s * 2.0 / ((len(en_s) + len(ja_s)) or 1)
         return s
 
-    def count_matches(self, en_s, ja_s):
+    def score_v2(self, en_s, ja_s):
         en_s = self.extract_en_content_lemmas(en_s)
         ja_s = self.extract_ja_content_lemmas(ja_s)
+
+        if len(ja_s) == 0: return 0
 
         s = 0
         for en_w in en_s:
             for ja_w in ja_s:
                 if self.dict.is_translation_pair(en_w, ja_w):
-                    print en_w, ja_w
                     s += 1
-        return s
+        return s * 1.0
 
 
 if __name__ == '__main__':
