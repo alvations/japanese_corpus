@@ -115,6 +115,6 @@ class TF_IDF():
         all_tokens = set([w for s in corpus for w in s])
         for tok in all_tokens:
             contains_tok = map(lambda s: tok in s, corpus)
-            idf_vals[tok] = 1 + math.log(len(corpus) * 1.0 / sum(contains_tok))
+            idf_vals[tok] = math.log(len(corpus) * 1.0 / sum(contains_tok))
         return idf_vals
 

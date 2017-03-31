@@ -117,7 +117,7 @@ class Aligner():
             sims = [m[0] for m in matches]
             sim_mean = np.mean(sims)
             sim_std = np.std(sims)
-            return sim_mean + (0.25 * sim_std)
+            return sim_mean + (0.50 * sim_std)
 
         matches = self.get_caption_matches()
 
@@ -132,13 +132,7 @@ class Aligner():
             len_ratio = len(en) * 1.0 / len(ja)
 
             if sim > sim_cutoff and len_ratio < ratio_cutoff:
-#                print en
-#                print ja
-#                print sim
-#                print trans
-#                print en_vec
-#                print trans_vec
-#                print
+                print 'spewing ', en, ja, sim, trans
                 yield en, ja, sim, trans
 
 

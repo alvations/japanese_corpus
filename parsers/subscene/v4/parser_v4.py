@@ -35,7 +35,7 @@ import argparse # option parsing
 from guessit import guessit
 from difflib import SequenceMatcher
 from subfile_aligner import Aligner
-
+import random
 
 
 def process_command_line():
@@ -47,6 +47,7 @@ def process_command_line():
     parser.add_argument('data_loc', metavar='data_loc', type=str, help='crawl output directory')
     parser.add_argument('en_out', metavar='en_out', type=str, help='en output dir')
     parser.add_argument('ja_out', metavar='ja_out', type=str, help='ja output dir')
+    parser.add_argument('donefile', metavar='donefile', type=str, help='file to track finished srts with')
 
     # optional args                                                                                                                  
     parser.add_argument('-t', '--threads', dest='num_threads', type=int, default=1, help='num threads to parse with')
@@ -103,63 +104,91 @@ def get_file_alignments(ja_subfile, en_title_root):
     return alignments
 
 
-def extract_subs(ja_srt, title_root):
+def get_dones(donefile):
+    if not os.path.exists(donefile):
+        return []
+    dones = open(donefile).readlines()
+    dones = [x.strip() for x in dones]
+    return dones
+
+
+def update_dones(donefile, srt):
+    with open(donefile, 'a') as dones:
+        dones.write(srt + '\n')
+
+
+def extract_subs(ja_srt, title_root, donefile):
     """ parse and align, and write subs for a pair of srt files
     """
-    print '\t GETTING FILE ALIGNMENTS FOR ', ja_srt
-    en_srts = get_file_alignments(ja_srt, os.path.join(title_root, 'en'))
-    print '\t ALIGNED EN FILES FOR ', ja_srt
-    for en_srt in en_srts:
-        print '\t\t ', en_srt
+    try:
+        dones = get_dones(donefile)
+        if ja_srt in dones:
+            print 'ALREADY DONE, SHORT CIRCUTING ', ja_srt
+            return
+        update_dones(donefile, ja_srt)
 
-    print '\t BUILDING SUBTITLE ALIGNER FOR...', ja_srt
-    a = Aligner(ja_srt)
-    print '\t SUBTITLE ALIGNER BUILT...', ja_srt
+        print '\t GETTING FILE ALIGNMENTS FOR ', ja_srt
+        en_srts = get_file_alignments(ja_srt, os.path.join(title_root, 'en'))
+        print '\t ALIGNED EN FILES FOR ', ja_srt
+        for en_srt in en_srts:
+            print '\t\t ', en_srt
 
-    print '\t HARVESTING SUBS FROM', ja_srt
-    alignments = []
-    for en_subfile in en_srts:
-        print '\t\t MATCHING WITH ', en_subfile
-        a.load(en_subfile)
-        for pair in a.solve_v3():
-            alignments.append(pair)
-    
-    if len(alignments) == 0:
-        print 'NO ALIGNMENTS FOR ', ja_srt, en_srts
-        return
-    en = ''
-    ja = ''
-    t = ''
-    for en_s, ja_s, sim, trans in alignments:
-        t += trans + '\n' 
-        en += en_s + '\n'
-        ja += ja_s + '\n'
-    title = title_root.split('/')[1]
-    print '\t WRITING RESULTS TO ', title + '_en_subs'
-    with open(title + '_en_subs', 'a') as f:
-        f.write(en.encode('utf8'))
-    print '\t WRITING RESULTS TO ', title + '_trans_subs'
-    with open(title + '_trans_subs', 'a') as f:
-        f.write(t.encode('utf8'))
-    print '\t WRITING RESULTS TO ', title + '_ja_subs'
-    with open(title + '_ja_subs', 'a') as f:
-        f.write(ja.encode('utf8'))
+        print '\t BUILDING SUBTITLE ALIGNER FOR...', ja_srt
+        a = Aligner(ja_srt)
+        print '\t SUBTITLE ALIGNER BUILT...', ja_srt
+
+        print '\t HARVESTING SUBS FROM', ja_srt
+        alignments = []
+        for en_subfile in en_srts:
+            print '\t\t MATCHING WITH ', en_subfile
+            a.load(en_subfile)
+            for pair in a.solve_v3():
+                alignments.append(pair)
+
+        if len(alignments) == 0:
+            print 'NO ALIGNMENTS FOR ', ja_srt, en_srts
+            return
+        en = ''
+        ja = ''
+        t = ''
+        for en_s, ja_s, sim, trans in alignments:
+            t += str(sim) + "|" + trans + '\n' 
+            en += en_s + '\n'
+            ja += ja_s + '\n'
+        title = title_root.split('/')[1]
+        print '\t WRITING RESULTS TO ', title + '_en_subs'
+        with open(title + '_en_subs', 'a') as f:
+            f.write(en.encode('utf8'))
+        print '\t WRITING RESULTS TO ', title + '_trans_subs'
+        with open(title + '_trans_subs', 'a') as f:
+            f.write(t.encode('utf8'))
+        print '\t WRITING RESULTS TO ', title + '_ja_subs'
+        with open(title + '_ja_subs', 'a') as f:
+            f.write(ja.encode('utf8'))
+    except Exception as e:
+        print 'EXCEPTION  ON ', ja_srt
+        with open('EXCEPTIONS', 'a') as f:
+            f.write(str(e))
 
 
 def generate_subfiles(root_dir):
     """ spits out ja files and aligned en files
     """
+    out = []
     for title_dir in os.listdir(root_dir):
         for ja_subfile in os.listdir(os.path.join(root_dir, title_dir, 'ja')):
-            yield os.path.join(root_dir, title_dir, 'ja', ja_subfile), \
-                  os.path.join(root_dir, title_dir)
+            out.append((os.path.join(root_dir, title_dir, 'ja', ja_subfile), \
+                        os.path.join(root_dir, title_dir)))
+    random.shuffle(out)
+    for (ja, title) in out:
+        yield ja, title
 
 
-def main(data_loc, en_out, ja_out, num_threads):
+def main(data_loc, en_out, ja_out, num_threads, donefile):
     root = data_loc
     os.system("find %s -type f -name '*.DS_Store' -delete" % root)
 
-    Parallel(n_jobs=num_threads)(delayed(extract_subs)(ja, title) \
+    Parallel(n_jobs=num_threads)(delayed(extract_subs)(ja, title, donefile) \
                                      for (ja, title) in generate_subfiles(data_loc))
 
 #    for ja_srt, title_root in generate_subfiles(data_loc):
@@ -189,5 +218,5 @@ def main(data_loc, en_out, ja_out, num_threads):
                                                                                                                                      
 if __name__ == '__main__':
     args = process_command_line()
-    main(args.data_loc, args.en_out, args.ja_out, args.num_threads)
+    main(args.data_loc, args.en_out, args.ja_out, args.num_threads, args.donefile)
 
