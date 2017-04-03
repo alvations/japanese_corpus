@@ -37,6 +37,7 @@ class Aligner():
         self.en = pysrt.open(en_file)
         self.en_start = self.first_content_caption(self.en)
         # build tf-idf vectors for each caption
+        # TODO - build with ja translations since those are pivots
         self.tf_idf = TF_IDF(en_file)        
 
 
@@ -79,6 +80,9 @@ class Aligner():
     def get_caption_matches(self):
         """ match up en and ja srt files
             returns: a list of (en caption, ja caption) tuples
+
+            TODO - use trans as reference for in tf-idf matching because
+                   those are your pivots anyway....
         """
         j = self.ja_start
         e = self.en_start
