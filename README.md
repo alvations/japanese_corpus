@@ -1,6 +1,9 @@
 # Description
 
-This project aims to produce a large corpus of parallel EN-JA sentences. It is motivated by the paucity of freely available data in machine translation, especially for uncommon language pairs. We have ~3.4 million sentences now, making this one of the largest freely available datasets of its kind! 
+This project aims to produce a large corpus of parallel EN-JA sentences. It is motivated by the paucity of freely available data in machine translation, especially for uncommon language pairs. 
+
+
+We have ~3.4 million sentences now, making it **the biggest EN-JA corpus of all time!**
 
 We harvested these data by 
 
